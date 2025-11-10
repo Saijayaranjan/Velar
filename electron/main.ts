@@ -196,14 +196,15 @@ export class AppState {
     let trayImage: Electron.NativeImage
     try {
       if (process.platform === 'darwin') {
-        // On macOS, create image with both regular and @2x for Retina displays
-        const iconPath = path.join(__dirname, "../assets/icons/velar_mac_tray.png")
-        const icon2xPath = path.join(__dirname, "../assets/icons/velar_tray_icon2x.png")
+        // On macOS, create image with both 22px (1x) and 44px (2x) for Retina displays
+        const icon1xPath = path.join(__dirname, "../assets/icons/tray_22.png")
+        const icon2xPath = path.join(__dirname, "../assets/icons/tray_44.png")
         
-        trayImage = nativeImage.createFromPath(iconPath)
+        trayImage = nativeImage.createFromPath(icon1xPath)
         
         // Add @2x version for Retina displays
-        if (require('fs').existsSync(icon2xPath)) {
+        const fs = require('fs')
+        if (fs.existsSync(icon2xPath)) {
           const icon2x = nativeImage.createFromPath(icon2xPath)
           if (!icon2x.isEmpty()) {
             trayImage.addRepresentation({
@@ -216,8 +217,8 @@ export class AppState {
         // Use template image for better integration with system theme
         trayImage.setTemplateImage(true)
       } else {
-        // Other platforms use the regular icon
-        const iconPath = path.join(__dirname, "../assets/icons/velar_mac_tray.png")
+        // Other platforms use the 22px icon
+        const iconPath = path.join(__dirname, "../assets/icons/tray_22.png")
         trayImage = nativeImage.createFromPath(iconPath)
       }
     } catch (error) {

@@ -37,6 +37,7 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
+      "icon": "assets/icons/icon.icns",
       "target": [
         {
           "target": "dmg",
@@ -48,6 +49,7 @@
       ]
     },
     "win": {
+      "icon": "assets/icons/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -96,7 +98,16 @@
       }
     ]
   },
-  "keywords": ["ai-assistant", "screenshot-analysis", "electron-app", "ai-powered", "cluely-alternative", "free-cluely", "interview-assistant", "meeting-companion"],
+  "keywords": [
+    "ai-assistant",
+    "screenshot-analysis",
+    "electron-app",
+    "ai-powered",
+    "cluely-alternative",
+    "free-cluely",
+    "interview-assistant",
+    "meeting-companion"
+  ],
   "author": "Velar Team",
   "license": "CC-BY-NC-4.0",
   "description": "Velar - Free Cluely Alternative. AI-Powered Screenshot Analysis & Debugging Assistant",
@@ -120,6 +131,7 @@
     "dotenv": "^17.2.3",
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
+    "electron-icon-builder": "^2.0.1",
     "electron-is-dev": "^3.0.1",
     "postcss": "^8.4.49",
     "rimraf": "^6.0.1",

@@ -4,6 +4,7 @@ import { WindowHelper } from "./WindowHelper"
 import { ScreenshotHelper } from "./ScreenshotHelper"
 import { ShortcutsHelper } from "./shortcuts"
 import { ProcessingHelper } from "./ProcessingHelper"
+import path from "node:path"
 
 export class AppState {
   private static instance: AppState | null = null
@@ -191,16 +192,19 @@ export class AppState {
   }
 
   public createTray(): void {
-    // Create a simple tray icon
-    const image = nativeImage.createEmpty()
-    
-    // Try to use a system template image for better integration
-    let trayImage = image
+    // Load the app icon for tray
+    let trayImage: Electron.NativeImage
     try {
-      // Create a minimal icon - just use an empty image and set the title
-      trayImage = nativeImage.createFromBuffer(Buffer.alloc(0))
+      // Use the 16x16 PNG for tray icon
+      const iconPath = path.join(__dirname, "../assets/icons/16x16.png")
+      trayImage = nativeImage.createFromPath(iconPath)
+      
+      // On macOS, use template image for better integration with system theme
+      if (process.platform === 'darwin') {
+        trayImage.setTemplateImage(true)
+      }
     } catch (error) {
-      console.log("Using empty tray image")
+      console.log("Could not load tray icon, using empty image:", error)
       trayImage = nativeImage.createEmpty()
     }
     
@@ -264,6 +268,27 @@ export class AppState {
     this.tray.on('double-click', () => {
       this.centerAndShowWindow()
     })
+  }
+
+  public destroyTray(): void {
+    if (this.tray) {
+      this.tray.destroy()
+      this.tray = null
+    }
+  }
+
+  public showTray(): void {
+    if (!this.tray) {
+      this.createTray()
+    }
+  }
+
+  public hideTray(): void {
+    this.destroyTray()
+  }
+
+  public getTray(): Tray | null {
+    return this.tray
   }
 
   public setHasDebugged(value: boolean): void {

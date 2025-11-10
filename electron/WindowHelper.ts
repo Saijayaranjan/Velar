@@ -1,5 +1,5 @@
 
-import { BrowserWindow, screen } from "electron"
+import { BrowserWindow, screen, nativeImage } from "electron"
 import { AppState } from "main"
 import path from "node:path"
 
@@ -73,6 +73,21 @@ export class WindowHelper {
     this.screenWidth = workArea.width
     this.screenHeight = workArea.height
 
+    // Load app icon
+    let appIcon: Electron.NativeImage | undefined
+    try {
+      let iconPath: string
+      if (process.platform === 'win32') {
+        iconPath = path.join(__dirname, "../assets/icons/icon.ico")
+      } else if (process.platform === 'darwin') {
+        iconPath = path.join(__dirname, "../assets/icons/icon.icns")
+      } else {
+        iconPath = path.join(__dirname, "../assets/icons/icon.png")
+      }
+      appIcon = nativeImage.createFromPath(iconPath)
+    } catch (error) {
+      console.log("Could not load app icon:", error)
+    }
     
     const windowSettings: Electron.BrowserWindowConstructorOptions = {
       width: 400,
@@ -96,6 +111,7 @@ export class WindowHelper {
       movable: true,
       x: 100, // Start at a visible position
       y: 100,
+      icon: appIcon, // Set the app icon
       // Critical for screen capture evasion - makes window invisible to screen recording
       ...(process.platform === 'darwin' ? {
         visualEffectState: 'active'
@@ -356,6 +372,9 @@ export class WindowHelper {
     this.isInvisibleMode = !this.isInvisibleMode
 
     if (this.isInvisibleMode) {
+      // Hide the tray icon in invisibility mode
+      this.appState.hideTray()
+      
       // macOS: Use setContentProtection to prevent screen capture
       if (process.platform === 'darwin') {
         // This is the KEY - makes window invisible to screen sharing but visible to user
@@ -392,6 +411,9 @@ export class WindowHelper {
       // Send event to renderer to show indicator
       this.mainWindow.webContents.send('invisibility-mode-changed', true)
     } else {
+      // Show the tray icon when exiting invisibility mode
+      this.appState.showTray()
+      
       // Disable screen capture protection
       if (process.platform === 'darwin') {
         this.mainWindow.setContentProtection(false)

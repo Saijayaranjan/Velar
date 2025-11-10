@@ -3,10 +3,20 @@
 @tailwind utilities;
 
 /* Cluely-inspired Minimalist Dark Theme */
+html, body {
+  background: transparent;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  background: transparent;
 }
 
 /* Minimalist Overlay Glass - Very subtle, dark, unobtrusive */

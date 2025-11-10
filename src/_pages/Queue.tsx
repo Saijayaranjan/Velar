@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { useQuery } from "react-query"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { MessageSquare, Cloud, Home, Settings as SettingsIcon, RefreshCw } from 'lucide-react'
+import { TbSparkles, TbCloud, TbHome, TbSettings, TbRefresh, TbScan } from 'react-icons/tb'
 import ScreenshotQueue from "../components/Queue/ScreenshotQueue"
 import {
   Toast,
@@ -13,6 +13,7 @@ import {
 } from "../components/ui/toast"
 import QueueCommands from "../components/Queue/QueueCommands"
 import ModelSelector from "../components/ui/ModelSelector"
+import { Settings } from "./Settings"
 
 interface QueueProps {
   setView: React.Dispatch<React.SetStateAction<"queue" | "solutions" | "debug">>
@@ -155,6 +156,26 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
     }
   }, []);
 
+  // Listen for chat toggle shortcut (Cmd+J)
+  useEffect(() => {
+    const cleanup = (window.electronAPI as any).onToggleChat?.(() => {
+      setIsChatOpen(prev => {
+        const newState = !prev
+        // If opening the chat, focus the input after a brief delay
+        if (newState) {
+          setTimeout(() => {
+            chatInputRef.current?.focus()
+          }, 100)
+        }
+        return newState
+      })
+    })
+    
+    return () => {
+      if (cleanup) cleanup()
+    }
+  }, []);
+
   useEffect(() => {
     const updateDimensions = () => {
       if (contentRef.current) {
@@ -210,26 +231,72 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
   useEffect(() => {
     // Listen for screenshot taken event
     const unsubscribe = window.electronAPI.onScreenshotTaken(async (data) => {
+      console.log("Screenshot taken event received:", data);
+      
       // Refetch screenshots to update the queue
       await refetch();
-      // Show loading in chat
+      
+      // Auto-open chatbox when screenshot is taken
+      setIsChatOpen(true);
+      
+      // Show "Analyzing image..." message first with icon
+      setChatMessages((msgs) => [...msgs, { 
+        role: "gemini", 
+        text: "**Analyzing image...**" 
+      }]);
+      
+      // Wait 2 seconds to show the analyzing message
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Now show loading state (Thinking...)
       setChatLoading(true);
+      
       try {
-        // Get the latest screenshot path
-        const latest = data?.path || (Array.isArray(data) && data.length > 0 && data[data.length - 1]?.path);
-        if (latest) {
+        // Get the screenshot path from the event data
+        const screenshotPath = data?.path;
+        console.log("Analyzing screenshot:", screenshotPath);
+        
+        if (screenshotPath) {
           // Call the LLM to process the screenshot
-          const response = await window.electronAPI.invoke("analyze-image-file", latest);
-          setChatMessages((msgs) => [...msgs, { role: "gemini", text: response.text }]);
+          const response = await window.electronAPI.invoke("analyze-image-file", screenshotPath);
+          console.log("Analysis response:", response);
+          
+          // Remove the "Analyzing image..." message and add the AI response
+          setChatMessages((msgs) => {
+            // Remove the last message (Analyzing image...)
+            const filtered = msgs.slice(0, -1);
+            // Add the actual response
+            return [...filtered, { 
+              role: "gemini", 
+              text: response.text || response 
+            }];
+          });
+        } else {
+          console.error("No screenshot path in event data");
+          setChatMessages((msgs) => {
+            const filtered = msgs.slice(0, -1);
+            return [...filtered, { 
+              role: "gemini", 
+              text: "Error: Screenshot was taken but path is missing" 
+            }];
+          });
         }
       } catch (err) {
-        setChatMessages((msgs) => [...msgs, { role: "gemini", text: "Error: " + String(err) }]);
+        console.error("Error analyzing screenshot:", err);
+        setChatMessages((msgs) => {
+          const filtered = msgs.slice(0, -1);
+          return [...filtered, { 
+            role: "gemini", 
+            text: "Error analyzing screenshot: " + String(err) 
+          }];
+        });
       } finally {
         setChatLoading(false);
       }
     });
+    
     return () => {
-      unsubscribe && unsubscribe();
+      if (unsubscribe) unsubscribe();
     };
   }, [refetch]);
 
@@ -239,10 +306,20 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
   }
 
   const handleChatToggle = () => {
-    setIsChatOpen(!isChatOpen)
+    setIsChatOpen(prev => {
+      const newState = !prev
+      // If opening the chat, focus the input after a brief delay
+      if (newState) {
+        setTimeout(() => {
+          chatInputRef.current?.focus()
+        }, 100)
+      }
+      return newState
+    })
   }
 
   const handleSettingsToggle = () => {
+    // Toggle settings panel inline (like chat)
     setIsSettingsOpen(!isSettingsOpen)
   }
 
@@ -255,6 +332,20 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
       role: "gemini", 
       text: `Switched to ${providerIcon} ${modelName}. Ready for your questions!` 
     }])
+  }
+
+  // Format model name for display - make it more readable
+  const formatModelName = (model: string, provider: string) => {
+    if (provider === 'gemini') {
+      // Keep "Gemini" prefix and format the rest
+      return model
+        .replace(/-/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+    }
+    // For Ollama, just return as-is
+    return model
   }
 
 
@@ -282,7 +373,6 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
           <div className="flex items-center gap-3 flex-wrap">
             <div className="w-fit">
               <QueueCommands
-                screenshots={screenshots}
                 onTooltipVisibilityChange={handleTooltipVisibilityChange}
                 onChatToggle={handleChatToggle}
                 onSettingsToggle={handleSettingsToggle}
@@ -325,65 +415,62 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
             )}
           </div>
           
-          {/* Modern Chat Interface */}
+          {/* Cluely-style Minimalist Chat */}
           {isChatOpen && (
             <div className="mt-2 w-full animate-slide-up">
-              <div className="modern-chat-container rounded-xl p-2.5 flex flex-col">
-                {/* Elegant Chat Header */}
-                <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/10">
+              <div className="liquid-glass rounded-lg p-2.5 flex flex-col">
+                {/* Minimal Chat Header */}
+                <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/5">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-gradient-to-br from-cluely-accent-teal/20 to-cluely-accent-cyan/10 border border-cluely-accent-teal/30">
-                      <MessageSquare size={13} className="text-cluely-accent-teal" />
-                    </div>
-                    <div>
-                      <div className="text-[11px] font-medium text-cluely-text-primary">AI Assistant</div>
-                      <div className="text-[9px] text-cluely-text-muted flex items-center gap-1.5 mt-0.5">
-                        {currentModel.provider === "ollama" ? (
-                          <><Home size={9} className="text-cluely-accent-cyan" /> Local</>
-                        ) : (
-                          <><Cloud size={9} className="text-cluely-accent-teal" /> Cloud</>
-                        )}
-                        <span className="text-cluely-text-muted/60">•</span>
-                        <span className="text-cluely-text-muted">{currentModel.model}</span>
-                      </div>
+                    <TbSparkles size={14} className="text-teal-400" />
+                    <div className="text-[10px] text-gray-300 flex items-center gap-1.5">
+                      {currentModel.provider === "ollama" ? (
+                        <>
+                          <TbHome size={10} className="text-cyan-400" />
+                          <span>Local</span>
+                        </>
+                      ) : (
+                        <>
+                          <TbCloud size={10} className="text-teal-400" />
+                          <span>Cloud</span>
+                        </>
+                      )}
+                      <span className="text-gray-600">•</span>
+                      <span className="text-gray-400">{formatModelName(currentModel.model, currentModel.provider)}</span>
                     </div>
                   </div>
                   <button
                     onClick={() => setIsChatExpanded(!isChatExpanded)}
-                    className="modern-icon-button group"
+                    className="p-1 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-all"
                     title={isChatExpanded ? "Collapse" : "Expand"}
                   >
                     {isChatExpanded ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
                       </svg>
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
                       </svg>
                     )}
                   </button>
                 </div>
                 
-                {/* Modern Messages Area */}
+                {/* Messages Area - Minimal */}
                 <div 
                   ref={chatMessagesRef}
-                  className={`flex-1 overflow-y-auto mb-2 space-y-2 transition-all duration-300 ${isChatExpanded ? 'max-h-80 min-h-[160px]' : 'max-h-48 min-h-[100px]'}`}
+                  className={`flex-1 overflow-y-auto mb-2 space-y-1.5 transition-all duration-300 ${isChatExpanded ? 'max-h-80 min-h-[160px]' : 'max-h-48 min-h-[100px]'}`}
                 >
                   {chatMessages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full py-4 space-y-2.5">
-                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-cluely-accent-teal/10 to-cluely-accent-cyan/5 border border-cluely-accent-teal/20">
-                        <MessageSquare size={18} className="text-cluely-accent-teal opacity-60" />
+                    <div className="flex flex-col items-center justify-center h-full py-3 space-y-2">
+                      <div className="p-2 rounded-lg bg-teal-500/10 border border-teal-500/20">
+                        <TbSparkles size={14} className="text-teal-400" />
                       </div>
-                      <div className="text-center space-y-1.5">
-                        <p className="text-[10px] text-cluely-text-secondary font-medium">Start a conversation</p>
-                        <p className="text-[9px] text-cluely-text-muted max-w-xs">
-                          Take a screenshot (Cmd+H) for automatic analysis or type a message below
+                      <div className="text-center space-y-1">
+                        <p className="text-[9px] text-gray-300">Start a conversation</p>
+                        <p className="text-[8px] text-gray-500">
+                          Take a screenshot (Cmd+H) or type below
                         </p>
-                        <div className="flex items-center justify-center gap-1.5 text-[9px] text-cluely-text-muted pt-1">
-                          <SettingsIcon size={10} className="text-cluely-accent-teal" />
-                          <span>Switch AI models in settings</span>
-                        </div>
                       </div>
                     </div>
                   ) : (
@@ -394,10 +481,10 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                           className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
                         >
                           <div
-                            className={`max-w-[85%] px-2.5 py-2 rounded-xl text-[10px] shadow-sm backdrop-blur-sm markdown-content transition-all hover:shadow-md ${
+                            className={`max-w-[85%] px-2.5 py-1.5 rounded-lg text-[9px] markdown-content transition-all ${
                               msg.role === "user" 
-                                ? "bg-gradient-to-br from-cluely-accent-teal/20 to-cluely-accent-cyan/10 text-cluely-text-primary border border-cluely-accent-teal/30 rounded-br-md" 
-                                : "bg-cluely-dark-card/60 text-cluely-text-primary border border-white/10 rounded-bl-md"
+                                ? "bg-teal-500/15 text-white border border-teal-500/30 rounded-br-sm" 
+                                : "bg-gray-800/60 text-gray-200 border border-white/10 rounded-bl-sm"
                             }`}
                             style={{ wordBreak: "break-word", lineHeight: "1.5" }}
                           >
@@ -405,22 +492,22 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                               remarkPlugins={[remarkGfm]}
                               components={{
                                 p: ({node, ...props}) => <p className="mb-1.5 last:mb-0" {...props} />,
-                                strong: ({node, ...props}) => <strong className="font-semibold text-cluely-accent-teal" {...props} />,
-                                em: ({node, ...props}) => <em className="italic text-cluely-text-secondary" {...props} />,
+                                strong: ({node, ...props}) => <strong className="font-semibold text-white" {...props} />,
+                                em: ({node, ...props}) => <em className="italic text-gray-400" {...props} />,
                                 code: ({node, className, ...props}) => {
                                   const isInline = !className?.includes('language-')
                                   return isInline ? (
-                                    <code className="bg-cluely-dark-bg/70 px-1 py-0.5 rounded text-[9px] font-mono border border-white/10 text-cluely-accent-cyan" {...props} />
+                                    <code className="bg-black/30 px-1.5 py-0.5 rounded text-[9px] font-mono text-teal-400" {...props} />
                                   ) : (
-                                    <code className="block bg-cluely-dark-bg/70 p-2 rounded-lg text-[9px] font-mono overflow-x-auto my-1.5 border border-white/10" {...props} />
+                                    <code className="block bg-black/30 p-2 rounded text-[9px] font-mono overflow-x-auto my-1.5" {...props} />
                                   )
                                 },
-                                ul: ({node, ...props}) => <ul className="list-disc list-inside mb-1.5 space-y-0.5 text-cluely-text-secondary" {...props} />,
-                                ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-1.5 space-y-0.5 text-cluely-text-secondary" {...props} />,
-                                li: ({node, ...props}) => <li className="text-[10px]" {...props} />,
-                                h1: ({node, ...props}) => <h1 className="text-xs font-semibold mb-1.5 text-cluely-accent-teal" {...props} />,
-                                h2: ({node, ...props}) => <h2 className="text-[11px] font-semibold mb-1.5 text-cluely-accent-teal" {...props} />,
-                                h3: ({node, ...props}) => <h3 className="text-[10px] font-medium mb-1 text-cluely-text-primary" {...props} />,
+                                ul: ({node, ...props}) => <ul className="list-disc list-inside mb-1.5 space-y-0.5" {...props} />,
+                                ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-1.5 space-y-0.5" {...props} />,
+                                li: ({node, ...props}) => <li className="text-[9px]" {...props} />,
+                                h1: ({node, ...props}) => <h1 className="text-[10px] font-semibold mb-1.5 text-white" {...props} />,
+                                h2: ({node, ...props}) => <h2 className="text-[10px] font-semibold mb-1.5 text-white" {...props} />,
+                                h3: ({node, ...props}) => <h3 className="text-[9px] font-medium mb-1 text-gray-300" {...props} />,
                               }}
                             >
                               {msg.text}
@@ -430,12 +517,12 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                       ))}
                       {chatLoading && (
                         <div className="flex justify-start animate-fade-in">
-                          <div className="bg-cluely-dark-card/60 text-cluely-text-secondary px-2.5 py-2 rounded-xl rounded-bl-md text-[10px] backdrop-blur-sm border border-white/10 shadow-sm">
+                          <div className="bg-gray-800/60 text-gray-400 px-2.5 py-1.5 rounded-lg rounded-bl-sm text-[9px] border border-white/10">
                             <span className="inline-flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-cluely-accent-teal animate-pulse"></span>
-                              <span className="w-1.5 h-1.5 rounded-full bg-cluely-accent-teal animate-pulse animation-delay-200"></span>
-                              <span className="w-1.5 h-1.5 rounded-full bg-cluely-accent-teal animate-pulse animation-delay-400"></span>
-                              <span className="ml-1 text-cluely-text-muted">Thinking...</span>
+                              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
+                              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse animation-delay-200"></span>
+                              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse animation-delay-400"></span>
+                              <span className="ml-1">Thinking...</span>
                             </span>
                           </div>
                         </div>
@@ -444,7 +531,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                   )}
                 </div>
                 
-                {/* Modern Input Area */}
+                {/* Input Area - Minimal */}
                 <form
                   className="relative"
                   onSubmit={e => {
@@ -452,10 +539,10 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                     handleChatSend();
                   }}
                 >
-                  <div className="relative modern-input-wrapper">
+                  <div className="relative">
                     <input
                       ref={chatInputRef}
-                      className="w-full rounded-lg px-3 py-2 pr-10 bg-cluely-dark-bg/60 backdrop-blur-md text-cluely-text-primary placeholder-cluely-text-muted text-[10px] focus:outline-none focus:ring-2 focus:ring-cluely-accent-teal/50 border border-white/10 transition-all duration-200 hover:border-white/20"
+                      className="w-full rounded-lg px-2.5 py-1.5 pr-8 bg-gray-800/50 text-white placeholder-gray-500 text-[9px] focus:outline-none focus:ring-1 focus:ring-teal-500/50 border border-gray-700 transition-all hover:border-gray-600"
                       placeholder="Type your message..."
                       value={chatInput}
                       onChange={e => setChatInput(e.target.value)}
@@ -463,10 +550,10 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                     />
                     <button
                       type="submit"
-                      className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                      className={`absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded flex items-center justify-center transition-all ${
                         chatLoading || !chatInput.trim()
-                          ? 'bg-cluely-accent-teal/10 text-cluely-accent-teal/40 cursor-not-allowed'
-                          : 'bg-gradient-to-br from-cluely-accent-teal to-cluely-accent-cyan text-white hover:shadow-lg hover:shadow-cluely-accent-teal/25 hover:scale-105 active:scale-95'
+                          ? 'text-gray-600 cursor-not-allowed'
+                          : 'text-teal-400 hover:text-teal-300 hover:bg-teal-500/10'
                       }`}
                       disabled={chatLoading || !chatInput.trim()}
                       tabIndex={-1}
@@ -483,8 +570,8 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
           )}
           {/* Conditional Settings Interface */}
           {isSettingsOpen && (
-            <div className="mt-2 animate-slide-up">
-              <ModelSelector onModelChange={handleModelChange} onChatOpen={() => setIsChatOpen(true)} />
+            <div className="mt-2 w-full animate-slide-up">
+              <Settings onClose={() => setIsSettingsOpen(false)} />
             </div>
           )}
         </div>

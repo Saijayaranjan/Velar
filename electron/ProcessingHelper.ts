@@ -2,6 +2,7 @@
 
 import { AppState } from "./main"
 import { LLMHelper } from "./LLMHelper"
+import { logger } from "./Logger"
 import dotenv from "dotenv"
 
 dotenv.config()
@@ -19,21 +20,24 @@ export class ProcessingHelper {
   constructor(appState: AppState) {
     this.appState = appState
     
-    // Check if user wants to use Ollama
+    // Initialize with a default configuration
+    // This will be updated later from ConfigManager in main.ts
     const useOllama = process.env.USE_OLLAMA === "true"
-    const ollamaModel = process.env.OLLAMA_MODEL // Don't set default here, let LLMHelper auto-detect
+    const ollamaModel = process.env.OLLAMA_MODEL
     const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434"
+    const apiKey = process.env.GEMINI_API_KEY
     
     if (useOllama) {
-      console.log("[ProcessingHelper] Initializing with Ollama")
+      logger.info("Initializing with Ollama (from env)")
       this.llmHelper = new LLMHelper(undefined, true, ollamaModel, ollamaUrl)
-    } else {
-      const apiKey = process.env.GEMINI_API_KEY
-      if (!apiKey) {
-        throw new Error("GEMINI_API_KEY not found in environment variables. Set GEMINI_API_KEY or enable Ollama with USE_OLLAMA=true")
-      }
-      console.log("[ProcessingHelper] Initializing with Gemini")
+    } else if (apiKey) {
+      logger.info("Initializing with Gemini (from env)")
       this.llmHelper = new LLMHelper(apiKey, false)
+    } else {
+      // Create a placeholder that will be configured later
+      logger.info("Initializing with placeholder LLM (will be configured from ConfigManager)")
+      // Use a dummy key for now, will be replaced
+      this.llmHelper = new LLMHelper("placeholder", false)
     }
   }
 
@@ -62,7 +66,7 @@ export class ProcessingHelper {
           this.appState.setProblemInfo({ problem_statement: audioResult.text, input_format: {}, output_format: {}, constraints: [], test_cases: [] });
           return;
         } catch (err: any) {
-          console.error('Audio processing error:', err);
+          logger.error('Audio processing error', { error: err });
           mainWindow.webContents.send(this.appState.PROCESSING_EVENTS.INITIAL_SOLUTION_ERROR, err.message);
           return;
         }
@@ -86,7 +90,7 @@ export class ProcessingHelper {
         mainWindow.webContents.send(this.appState.PROCESSING_EVENTS.PROBLEM_EXTRACTED, problemInfo);
         this.appState.setProblemInfo(problemInfo);
       } catch (error: any) {
-        console.error("Image processing error:", error)
+        logger.error("Image processing error", { error })
         mainWindow.webContents.send(this.appState.PROCESSING_EVENTS.INITIAL_SOLUTION_ERROR, error.message)
       } finally {
         this.currentProcessingAbortController = null
@@ -96,7 +100,7 @@ export class ProcessingHelper {
       // Debug mode
       const extraScreenshotQueue = this.appState.getScreenshotHelper().getExtraScreenshotQueue()
       if (extraScreenshotQueue.length === 0) {
-        console.log("No extra screenshots to process")
+        logger.debug("No extra screenshots to process")
         mainWindow.webContents.send(this.appState.PROCESSING_EVENTS.NO_SCREENSHOTS)
         return
       }
@@ -129,7 +133,7 @@ export class ProcessingHelper {
         )
 
       } catch (error: any) {
-        console.error("Debug processing error:", error)
+        logger.error("Debug processing error", { error })
         mainWindow.webContents.send(
           this.appState.PROCESSING_EVENTS.DEBUG_ERROR,
           error.message

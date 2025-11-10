@@ -4,6 +4,10 @@ import { WindowHelper } from "./WindowHelper"
 import { ScreenshotHelper } from "./ScreenshotHelper"
 import { ShortcutsHelper } from "./shortcuts"
 import { ProcessingHelper } from "./ProcessingHelper"
+import { logger } from "./Logger"
+import { ConfigManager } from "./ConfigManager"
+import { errorHandler } from "./ErrorHandler"
+import { UpdateManager } from "./UpdateManager"
 import path from "node:path"
 
 export class AppState {
@@ -119,12 +123,10 @@ export class AppState {
   }
 
   public toggleMainWindow(): void {
-    console.log(
-      "Screenshots: ",
-      this.screenshotHelper.getScreenshotQueue().length,
-      "Extra screenshots: ",
-      this.screenshotHelper.getExtraScreenshotQueue().length
-    )
+    logger.debug("Toggle main window", {
+      screenshots: this.screenshotHelper.getScreenshotQueue().length,
+      extraScreenshots: this.screenshotHelper.getExtraScreenshotQueue().length
+    })
     this.windowHelper.toggleMainWindow()
   }
 
@@ -211,7 +213,7 @@ export class AppState {
         }
       }
     } catch (error) {
-      console.log("Could not load tray icon, using empty image:", error)
+      logger.warn("Could not load tray icon, using empty image", { error })
       trayImage = nativeImage.createEmpty()
     }
     
@@ -256,7 +258,7 @@ export class AppState {
               })
             }
           } catch (error) {
-            console.error("Error taking screenshot from tray:", error)
+            logger.error("Error taking screenshot from tray", { error })
           }
         }
       },
@@ -350,17 +352,101 @@ export class AppState {
     const menu = Menu.buildFromTemplate(template)
     Menu.setApplicationMenu(menu)
   }
+
+  /**
+   * Cleanup method for resource disposal
+   * Called before app quit to ensure all resources are properly released
+   */
+  public async cleanup(): Promise<void> {
+    logger.info("Starting application cleanup")
+
+    try {
+      // 1. Unregister all global shortcuts
+      logger.debug("Unregistering global shortcuts")
+      this.shortcutsHelper.unregisterAll()
+
+      // 2. Cancel any ongoing processing
+      logger.debug("Canceling ongoing requests")
+      this.processingHelper.cancelOngoingRequests()
+
+      // 3. Clean up temporary screenshot files
+      logger.debug("Cleaning up temporary files")
+      await this.screenshotHelper.cleanupTempFiles()
+
+      // 4. Destroy tray icon
+      logger.debug("Destroying tray icon")
+      this.destroyTray()
+
+      // 5. Close main window if it exists
+      const mainWindow = this.getMainWindow()
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        logger.debug("Closing main window")
+        mainWindow.close()
+      }
+
+      logger.info("Application cleanup completed successfully")
+    } catch (error) {
+      logger.error("Error during application cleanup", { error })
+    }
+  }
 }
 
 // Application initialization
 async function initializeApp() {
   const appState = AppState.getInstance()
 
+  // Set up global error handlers
+  process.on('uncaughtException', (error: Error) => {
+    logger.error('Uncaught exception in main process', { error: error.message, stack: error.stack })
+    errorHandler.handleUncaughtException(error)
+  })
+
+  process.on('unhandledRejection', (reason: any) => {
+    logger.error('Unhandled rejection in main process', { reason: String(reason) })
+    errorHandler.handleUnhandledRejection(reason)
+  })
+
   // Initialize IPC handlers before window creation
+  const { initializeIpcHandlers, cleanupIpcHandlers } = await import('./ipcHandlers')
   initializeIpcHandlers(appState)
 
-  app.whenReady().then(() => {
-    console.log("App is ready")
+  app.whenReady().then(async () => {
+    logger.info("App is ready")
+    
+    // Initialize ConfigManager
+    const configManager = ConfigManager.getInstance()
+    await configManager.initialize()
+    logger.info("ConfigManager initialized")
+    
+    // Set main window reference for error handler (will be set after window creation)
+    // errorHandler.setMainWindow will be called after createWindow()
+    
+    // Check for .env migration
+    const envPath = path.join(process.cwd(), '.env')
+    const migrated = await configManager.migrateFromEnv(envPath)
+    if (migrated) {
+      logger.info("Migrated credentials from .env file")
+    }
+    
+    // Load configuration and initialize LLM with stored credentials
+    try {
+      const config = await configManager.getConfig()
+      const apiKey = await configManager.getApiKey(config.aiProvider)
+      
+      if (apiKey && config.aiProvider === 'gemini') {
+        // Initialize LLM with stored credentials
+        await appState.processingHelper.getLLMHelper().switchToGemini(apiKey, config.gemini?.model)
+        logger.info("Initialized LLM with stored Gemini credentials")
+      } else if (config.aiProvider === 'ollama') {
+        await appState.processingHelper.getLLMHelper().switchToOllama(
+          config.ollama?.model,
+          config.ollama?.endpoint
+        )
+        logger.info("Initialized LLM with Ollama configuration")
+      }
+    } catch (error) {
+      logger.warn("Could not initialize LLM with stored credentials", { error })
+    }
     
     // macOS: Hide dock icon completely - we only want menu bar icon
     if (process.platform === 'darwin' && app.dock) {
@@ -371,13 +457,42 @@ async function initializeApp() {
     appState.createApplicationMenu()
     
     appState.createWindow()
+    
+    // Set main window reference for error handler
+    const mainWindow = appState.getMainWindow()
+    if (mainWindow) {
+      errorHandler.setMainWindow(mainWindow)
+    }
+    
+    // Initialize UpdateManager
+    const updateManager = UpdateManager.getInstance()
+    if (mainWindow) {
+      updateManager.setMainWindow(mainWindow)
+    }
+    
+    // Check if setup is needed
+    const isFirstRun = configManager.isFirstRun()
+    if (isFirstRun) {
+      logger.info("First run detected, setup wizard will be shown")
+      // Send event to renderer to show setup wizard
+      if (mainWindow) {
+        mainWindow.webContents.once('did-finish-load', () => {
+          mainWindow.webContents.send('show-setup-wizard')
+        })
+      }
+    } else {
+      // Only check for updates if not first run
+      logger.info("Checking for updates on startup")
+      updateManager.checkForUpdatesOnStartup()
+    }
+    
     appState.createTray()
     // Register global shortcuts using ShortcutsHelper
     appState.shortcutsHelper.registerGlobalShortcuts()
   })
 
   app.on("activate", () => {
-    console.log("App activated")
+    logger.debug("App activated")
     if (appState.getMainWindow() === null) {
       appState.createWindow()
     }
@@ -390,9 +505,28 @@ async function initializeApp() {
     }
   })
 
+  // Cleanup before quit
+  app.on("before-quit", async (event) => {
+    event.preventDefault()
+    
+    logger.info("Application is quitting, performing cleanup")
+    
+    // Perform cleanup
+    await appState.cleanup()
+    
+    // Cleanup IPC handlers
+    const { cleanupIpcHandlers } = await import('./ipcHandlers')
+    cleanupIpcHandlers()
+    
+    // Now actually quit
+    app.exit(0)
+  })
+
   // Keep dock icon visible on macOS - removed app.dock?.hide()
   app.commandLine.appendSwitch("disable-background-timer-throttling")
 }
 
 // Start the application
-initializeApp().catch(console.error)
+initializeApp().catch((error) => {
+  logger.error("Failed to initialize app", { error })
+})

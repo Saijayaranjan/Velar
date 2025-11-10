@@ -5,6 +5,11 @@ import fs from "node:fs"
 import { app } from "electron"
 import { v4 as uuidv4 } from "uuid"
 import screenshot from "screenshot-desktop"
+import { exec } from "node:child_process"
+import { promisify } from "node:util"
+import { logger } from "./Logger"
+
+const execAsync = promisify(exec)
 
 export class ScreenshotHelper {
   private screenshotQueue: string[] = []
@@ -56,7 +61,7 @@ export class ScreenshotHelper {
     this.screenshotQueue.forEach((screenshotPath) => {
       fs.unlink(screenshotPath, (err) => {
         if (err)
-          console.error(`Error deleting screenshot at ${screenshotPath}:`, err)
+          logger.error("Error deleting screenshot", { path: screenshotPath, error: err })
       })
     })
     this.screenshotQueue = []
@@ -65,10 +70,7 @@ export class ScreenshotHelper {
     this.extraScreenshotQueue.forEach((screenshotPath) => {
       fs.unlink(screenshotPath, (err) => {
         if (err)
-          console.error(
-            `Error deleting extra screenshot at ${screenshotPath}:`,
-            err
-          )
+          logger.error("Error deleting extra screenshot", { path: screenshotPath, error: err })
       })
     })
     this.extraScreenshotQueue = []
@@ -78,18 +80,73 @@ export class ScreenshotHelper {
     hideMainWindow: () => void,
     showMainWindow: () => void
   ): Promise<string> {
+    let screenshotPath = ""
+    
     try {
       hideMainWindow()
       
       // Add a small delay to ensure window is hidden
+      await new Promise(resolve => setTimeout(resolve, 150))
+      
+      const targetDir = this.view === "queue" ? this.screenshotDir : this.extraScreenshotDir
+      screenshotPath = path.join(targetDir, `${uuidv4()}.png`)
+      
+      logger.debug("Attempting to capture screenshot", { path: screenshotPath })
+      
+      // Try using native macOS screencapture command first (more reliable)
+      try {
+        if (process.platform === 'darwin') {
+          // Use macOS native screencapture command
+          await execAsync(`screencapture -x "${screenshotPath}"`)
+          logger.debug("Screenshot captured using native screencapture")
+        } else {
+          // Fallback to screenshot-desktop library for other platforms
+          await screenshot({ filename: screenshotPath })
+          logger.debug("Screenshot captured using screenshot-desktop library")
+        }
+      } catch (screenshotError: any) {
+        logger.error("Screenshot capture error", { error: screenshotError })
+        
+        // Check for permission errors
+        const errorMsg = screenshotError?.message || String(screenshotError)
+        if (errorMsg.includes("could not create image") || 
+            errorMsg.includes("screencapture") ||
+            errorMsg.includes("permission") ||
+            errorMsg.includes("not authorized")) {
+          throw new Error(
+            "Screen Recording permission denied. Please enable Screen Recording for this app in System Settings > Privacy & Security > Screen Recording"
+          )
+        }
+        throw screenshotError
+      }
+      
+      // Wait a bit for the file to be written
       await new Promise(resolve => setTimeout(resolve, 100))
       
-      let screenshotPath = ""
+      // Verify the file was actually created and has content
+      let retries = 3
+      while (retries > 0) {
+        if (fs.existsSync(screenshotPath)) {
+          const stats = fs.statSync(screenshotPath)
+          if (stats.size > 0) {
+            logger.debug("Screenshot file created successfully", { 
+              path: screenshotPath, 
+              size: stats.size 
+            })
+            break
+          }
+        }
+        
+        retries--
+        if (retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+        } else {
+          throw new Error("Screenshot file was not created or is empty")
+        }
+      }
 
+      // Add to appropriate queue
       if (this.view === "queue") {
-        screenshotPath = path.join(this.screenshotDir, `${uuidv4()}.png`)
-        await screenshot({ filename: screenshotPath })
-
         this.screenshotQueue.push(screenshotPath)
         if (this.screenshotQueue.length > this.MAX_SCREENSHOTS) {
           const removedPath = this.screenshotQueue.shift()
@@ -97,14 +154,11 @@ export class ScreenshotHelper {
             try {
               await fs.promises.unlink(removedPath)
             } catch (error) {
-              console.error("Error removing old screenshot:", error)
+              logger.error("Error removing old screenshot", { error })
             }
           }
         }
       } else {
-        screenshotPath = path.join(this.extraScreenshotDir, `${uuidv4()}.png`)
-        await screenshot({ filename: screenshotPath })
-
         this.extraScreenshotQueue.push(screenshotPath)
         if (this.extraScreenshotQueue.length > this.MAX_SCREENSHOTS) {
           const removedPath = this.extraScreenshotQueue.shift()
@@ -112,26 +166,38 @@ export class ScreenshotHelper {
             try {
               await fs.promises.unlink(removedPath)
             } catch (error) {
-              console.error("Error removing old screenshot:", error)
+              logger.error("Error removing old screenshot", { error })
             }
           }
         }
       }
 
       return screenshotPath
-    } catch (error) {
-      console.error("Error taking screenshot:", error)
-      const errorMessage = error.message || String(error)
+    } catch (error: any) {
+      logger.error("Error capturing screenshot", { error })
+      
+      // Clean up failed screenshot file if it exists
+      if (screenshotPath && fs.existsSync(screenshotPath)) {
+        try {
+          fs.unlinkSync(screenshotPath)
+        } catch (cleanupError) {
+          logger.warn("Failed to clean up failed screenshot", { cleanupError })
+        }
+      }
+      
+      const errorMessage = error?.message || String(error)
       
       // Check if it's a permission error
-      if (errorMessage.includes("could not create image from display") || 
-          errorMessage.includes("screencapture")) {
+      if (errorMessage.includes("Screen Recording permission") ||
+          errorMessage.includes("could not create image from display") || 
+          errorMessage.includes("screencapture") ||
+          errorMessage.includes("permission")) {
         throw new Error(
           "Screen Recording permission denied. Please enable Screen Recording for this app in System Settings > Privacy & Security > Screen Recording"
         )
       }
       
-      throw new Error(`Failed to take screenshot: ${errorMessage}`)
+      throw new Error(`Failed to capture screenshot: ${errorMessage}`)
     } finally {
       // Ensure window is always shown again
       showMainWindow()
@@ -143,7 +209,7 @@ export class ScreenshotHelper {
       const data = await fs.promises.readFile(filepath)
       return `data:image/png;base64,${data.toString("base64")}`
     } catch (error) {
-      console.error("Error reading image:", error)
+      logger.error("Error reading image", { filepath, error })
       throw error
     }
   }
@@ -164,8 +230,50 @@ export class ScreenshotHelper {
       }
       return { success: true }
     } catch (error) {
-      console.error("Error deleting file:", error)
+      logger.error("Error deleting file", { path, error })
       return { success: false, error: error.message }
+    }
+  }
+
+  /**
+   * Clean up all temporary screenshot files
+   * Called during application cleanup
+   */
+  public async cleanupTempFiles(): Promise<void> {
+    logger.debug("Cleaning up temporary screenshot files")
+
+    try {
+      // Clean up screenshot queue files
+      for (const screenshotPath of this.screenshotQueue) {
+        try {
+          if (fs.existsSync(screenshotPath)) {
+            await fs.promises.unlink(screenshotPath)
+            logger.debug("Deleted screenshot file", { path: screenshotPath })
+          }
+        } catch (error) {
+          logger.warn("Failed to delete screenshot file", { path: screenshotPath, error })
+        }
+      }
+
+      // Clean up extra screenshot queue files
+      for (const screenshotPath of this.extraScreenshotQueue) {
+        try {
+          if (fs.existsSync(screenshotPath)) {
+            await fs.promises.unlink(screenshotPath)
+            logger.debug("Deleted extra screenshot file", { path: screenshotPath })
+          }
+        } catch (error) {
+          logger.warn("Failed to delete extra screenshot file", { path: screenshotPath, error })
+        }
+      }
+
+      // Clear the queues
+      this.screenshotQueue = []
+      this.extraScreenshotQueue = []
+
+      logger.debug("Temporary screenshot files cleanup completed")
+    } catch (error) {
+      logger.error("Error during screenshot cleanup", { error })
     }
   }
 }

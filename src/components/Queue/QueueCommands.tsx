@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useRef } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { MessageSquare, Settings, Eye, Mic, ShieldOff, X, GripVertical } from "lucide-react"
-import { Dialog, DialogContent, DialogClose } from "../ui/dialog"
+import { TbSparkles, TbSettings, TbEye, TbMicrophone, TbShieldLock, TbX, TbGripVertical, TbCamera, TbKeyboard, TbInfoCircle } from "react-icons/tb"
 
 interface QueueCommandsProps {
   onTooltipVisibilityChange: (visible: boolean, height: number) => void
-  screenshots: Array<{ path: string; preview: string }>
   onChatToggle: () => void
   onSettingsToggle: () => void
 }
 
 const QueueCommands: React.FC<QueueCommandsProps> = ({
   onTooltipVisibilityChange,
-  screenshots,
   onChatToggle,
   onSettingsToggle
 }) => {
@@ -40,12 +37,23 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
       setIsInvisibleMode(isInvisible)
     }
 
-    const cleanup = window.electronAPI.onInvisibilityModeChanged?.(handleInvisibilityChange)
+    const cleanup = (window.electronAPI as any).onInvisibilityModeChanged?.(handleInvisibilityChange)
     
     return () => {
       if (cleanup) cleanup()
     }
   }, [])
+
+  useEffect(() => {
+    // Listen for recording toggle shortcut
+    const cleanup = (window.electronAPI as any).onToggleRecording?.(() => {
+      handleRecordClick()
+    })
+    
+    return () => {
+      if (cleanup) cleanup()
+    }
+  }, [isRecording, mediaRecorder])
 
   const handleMouseEnter = () => {
     setIsTooltipVisible(true)
@@ -59,10 +67,21 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
     if (!isRecording) {
       // Start recording
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        // Request microphone access
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        })
+        
         const recorder = new MediaRecorder(stream)
         recorder.ondataavailable = (e) => chunks.current.push(e.data)
         recorder.onstop = async () => {
+          // Stop all tracks to release the microphone/system audio
+          stream.getTracks().forEach(track => track.stop())
+          
           const blob = new Blob(chunks.current, { type: chunks.current[0]?.type || 'audio/webm' })
           chunks.current = []
           const reader = new FileReader()
@@ -85,7 +104,7 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
         recorder.start()
         setIsRecording(true)
       } catch (err) {
-        setAudioResult('Could not start recording.')
+        setAudioResult('Could not start recording. Please allow microphone access.')
       }
     } else {
       // Stop recording
@@ -100,193 +119,164 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
     window.electronAPI.invoke('toggle-invisibility-mode')
   }
 
-  // Remove handleChatSend function
+  const handleScreenshotAndAnalyze = async () => {
+    try {
+      // Take screenshot - this will trigger the onScreenshotTaken event in Queue.tsx
+      // which automatically opens chat and analyzes the image
+      await window.electronAPI.takeScreenshot()
+    } catch (error) {
+      console.error('Error taking screenshot:', error)
+    }
+  }
 
   return (
     <div className="w-fit">
-      {/* Minimalist Cluely-style Command Bar */}
-      <div className="flex items-center gap-3">
-        {/* Main controls bubble */}
-        <div className="liquid-glass-bar flex items-center gap-3 text-[11px]">
-          {/* Invisibility Mode Toggle */}
+      {/* Cluely-style Minimalist Command Bar */}
+      <div className="flex items-center gap-2">
+        {/* Main controls bar - single horizontal row */}
+        <div className="liquid-glass-bar flex items-center gap-2">
+          {/* Invisibility Mode Toggle - Eye Icon */}
           <button
             className={`
-              px-3 py-1 rounded-full text-[10px] flex items-center gap-1.5 transition-all font-medium
+              p-1.5 rounded-lg transition-all
               ${isInvisibleMode 
-                ? 'bg-cluely-accent-teal/15 text-cluely-accent-teal border border-cluely-accent-teal/30 hover:bg-cluely-accent-teal/25' 
-                : 'text-cluely-text-secondary hover:text-cluely-text-primary hover:bg-white/5'
+                ? 'bg-teal-500/20 text-teal-400 hover:bg-teal-500/30' 
+                : 'text-gray-400 hover:text-white hover:bg-white/10'
               }
             `}
             onClick={handleInvisibilityToggle}
             type="button"
             title="Privacy Mode (Cmd+I)"
           >
-            {isInvisibleMode ? (
-              <>
-                <ShieldOff size={14} />
-                <span>Hidden</span>
-              </>
-            ) : (
-              <>
-                <Eye size={14} />
-                <span>Visible</span>
-              </>
-            )}
+            {isInvisibleMode ? <TbShieldLock size={18} /> : <TbEye size={18} />}
           </button>
 
-          {/* Vertical Separator */}
-          <div className="h-4 w-px bg-white/10" />
-
-          {/* Solve Command - Only show when screenshots exist */}
-          {screenshots.length > 0 && (
-            <>
-              <button className="flex items-center gap-1.5 text-cluely-accent-teal hover:text-cluely-accent-cyan transition-colors">
-                <span className="font-medium">Solve</span>
-                <div className="flex gap-0.5">
-                  <kbd className="px-1.5 py-0.5 bg-cluely-accent-teal/10 rounded text-[10px] border border-cluely-accent-teal/20">⌘</kbd>
-                  <kbd className="px-1.5 py-0.5 bg-cluely-accent-teal/10 rounded text-[10px] border border-cluely-accent-teal/20">↵</kbd>
-                </div>
-              </button>
-              <div className="h-4 w-px bg-white/10" />
-            </>
-          )}
-
-          {/* Voice Recording */}
+          {/* Voice Recording - Mic Icon */}
           <button
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all ${
+            className={`p-1.5 rounded-lg transition-all ${
               isRecording 
-                ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' 
-                : 'text-cluely-text-secondary hover:text-cluely-text-primary hover:bg-white/5'
+                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
+                : 'text-gray-400 hover:text-white hover:bg-white/10'
             }`}
             onClick={handleRecordClick}
             type="button"
+            title="Voice Recording (Cmd+G)"
           >
-            {isRecording ? (
-              <>
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                </span>
-                <span className="font-medium">Recording...</span>
-              </>
-            ) : (
-              <Mic size={16} />
-            )}
+            <TbMicrophone size={18} />
           </button>
 
-          {/* Chat Toggle */}
+          {/* Screenshot - Camera Icon */}
           <button
-            className="text-cluely-text-secondary hover:text-cluely-text-primary hover:bg-white/5 px-2 py-1 rounded-lg transition-all"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+            onClick={handleScreenshotAndAnalyze}
+            type="button"
+            title="Screenshot & Analyze (Cmd+H)"
+          >
+            <TbCamera size={18} />
+          </button>
+
+          {/* Chat/AI - Sparkles Icon */}
+          <button
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
             onClick={onChatToggle}
             type="button"
+            title="Ask AI (Cmd+J)"
           >
-            <MessageSquare size={16} />
+            <TbSparkles size={18} />
           </button>
 
-          {/* Settings Toggle */}
+          {/* Settings - Gear Icon */}
           <button
-            className="text-cluely-text-secondary hover:text-cluely-text-primary hover:bg-white/5 px-2 py-1 rounded-lg transition-all"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
             onClick={onSettingsToggle}
             type="button"
+            title="Settings"
           >
-            <Settings size={16} />
+            <TbSettings size={18} />
           </button>
 
-          {/* Help Tooltip */}
+          {/* Separator */}
+          <div className="h-4 w-px bg-white/10 mx-1" />
+
+          {/* Help/Info - Question Mark */}
           <div
             className="relative"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <div className="w-5 h-5 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center cursor-help transition-colors">
-              <span className="text-[10px] text-cluely-text-muted">?</span>
-            </div>
+            <button
+              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+              type="button"
+              title="Keyboard Shortcuts"
+            >
+              <TbInfoCircle size={18} />
+            </button>
 
-            {/* Tooltip Content */}
+            {/* Tooltip - Minimalist Cluely Style */}
             {isTooltipVisible && (
               <div
                 ref={tooltipRef}
-                className="absolute right-0 z-[9999] animate-fade-in"
+                className="absolute z-[9999]"
                 style={{
-                  top: 'calc(100% + 20px)',
-                  transformOrigin: 'top right'
+                  top: 'calc(100% + 12px)',
+                  right: '0',
                 }}
               >
-                <div className="keyboard-shortcuts-panel">
+                <div className="liquid-glass rounded-lg p-2.5 w-64 shadow-2xl border border-white/10">
                   {/* Header */}
-                  <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-white/10">
-                    <div className="p-1 rounded-lg bg-gradient-to-br from-cluely-accent-teal/20 to-cluely-accent-cyan/10 border border-cluely-accent-teal/20">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3 text-cluely-accent-teal">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xs font-semibold text-cluely-text-primary">Shortcuts</h3>
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/10">
+                    <TbKeyboard size={14} className="text-teal-400" />
+                    <span className="text-[11px] font-medium text-white">Shortcuts</span>
                   </div>
                   
-                  {/* Shortcuts List */}
-                  <div className="space-y-2">
+                  {/* Shortcuts List - Minimal */}
+                  <div className="space-y-1.5">
                     {/* Privacy Mode */}
-                    <div className="shortcut-row">
-                      <div className="flex items-center gap-1.5 flex-1">
-                        <div className="shortcut-icon teal">
-                          <ShieldOff size={11} />
-                        </div>
-                        <div>
-                          <div className="shortcut-title">Privacy Mode</div>
-                          <div className="shortcut-description">Prevent screen capture</div>
-                        </div>
+                    <div className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <TbShieldLock size={14} className="text-teal-400" />
+                        <span className="text-[10px] text-gray-300">Privacy Mode</span>
                       </div>
-                      <div className="shortcut-keys">
-                        <kbd className="shortcut-key accent">⌘</kbd>
-                        <kbd className="shortcut-key accent">I</kbd>
+                      <div className="flex gap-1">
+                        <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-300 font-mono">⌘</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-300 font-mono">I</kbd>
                       </div>
                     </div>
 
                     {/* Screenshot */}
-                    <div className="shortcut-row">
-                      <div className="flex items-center gap-1.5 flex-1">
-                        <div className="shortcut-icon">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-2.5 h-2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="shortcut-title">Screenshot</div>
-                          <div className="shortcut-description">Capture screen</div>
-                        </div>
+                    <div className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <TbCamera size={14} className="text-blue-400" />
+                        <span className="text-[10px] text-gray-300">Screenshot</span>
                       </div>
-                      <div className="shortcut-keys">
-                        <kbd className="shortcut-key">⌘</kbd>
-                        <kbd className="shortcut-key">H</kbd>
+                      <div className="flex gap-1">
+                        <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-300 font-mono">⌘</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-300 font-mono">H</kbd>
                       </div>
                     </div>
 
-                    {/* Analyze */}
-                    <div className="shortcut-row">
-                      <div className="flex items-center gap-1.5 flex-1">
-                        <div className="shortcut-icon">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-2.5 h-2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="shortcut-title">Analyze</div>
-                          <div className="shortcut-description">Process with AI</div>
-                        </div>
+                    {/* Voice */}
+                    <div className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <TbMicrophone size={14} className="text-red-400" />
+                        <span className="text-[10px] text-gray-300">Voice</span>
                       </div>
-                      <div className="shortcut-keys">
-                        <kbd className="shortcut-key">⌘</kbd>
-                        <kbd className="shortcut-key">↵</kbd>
+                      <div className="flex gap-1">
+                        <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-300 font-mono">⌘</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-300 font-mono">G</kbd>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Footer Note */}
-                  <div className="mt-2 pt-2 border-t border-white/10">
-                    <div className="flex items-start gap-1.5 text-[8px] text-cluely-text-muted leading-relaxed">
-                      <ShieldOff size={10} className="text-cluely-accent-teal flex-shrink-0 mt-0.5" />
-                      <span>Privacy mode prevents screen capture while keeping UI visible</span>
+                    {/* Chat */}
+                    <div className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <TbSparkles size={14} className="text-teal-400" />
+                        <span className="text-[10px] text-gray-300">Chat</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-300 font-mono">⌘</kbd>
+                        <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-[9px] text-gray-300 font-mono">J</kbd>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -294,69 +284,64 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
             )}
           </div>
 
-          {/* Separator */}
-          <div className="h-4 w-px bg-white/10" />
-
-          {/* Move Button */}
+          {/* Drag Handle */}
           <button
-            className="text-cluely-text-secondary hover:text-cluely-text-primary transition-colors p-1 cursor-move draggable-area"
+            className="p-1.5 text-gray-500 hover:text-gray-400 transition-colors cursor-move draggable-area"
             title="Move Window"
+            type="button"
           >
-            <GripVertical className="w-4 h-4" />
+            <TbGripVertical size={18} />
           </button>
         </div>
 
-        {/* Close button in separate circular bubble */}
-        <div className="liquid-glass-bar w-8 h-8 rounded-full flex items-center justify-center">
+        {/* Close button - separate pill */}
+        <div className="liquid-glass-bar">
           <button
-            className="text-red-400/70 hover:text-red-400 transition-colors"
-            title="Close App"
+            className="p-1.5 rounded-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
+            title="Quit App"
             onClick={() => window.electronAPI.quitApp()}
+            type="button"
           >
-            <X className="w-4 h-4" />
+            <TbX size={18} />
           </button>
         </div>
       </div>
 
-      {/* Audio Result Display (if any) */}
+      {/* Audio Result Display - Minimalist */}
       {audioResult && (
-        <div className="mt-2 modern-audio-result animate-slide-up">
+        <div className="mt-3 liquid-glass rounded-lg p-3 max-w-md animate-slide-up relative">
           <button
             onClick={() => setAudioResult(null)}
-            className="absolute top-2 right-2 text-cluely-text-secondary hover:text-cluely-accent-teal transition-colors p-1 rounded hover:bg-white/5"
-            aria-label="Close audio result"
+            className="absolute top-2 right-2 p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-all"
+            aria-label="Close"
+            type="button"
           >
-            <X size={14} />
+            <TbX size={14} />
           </button>
-          <div className="flex items-start gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-cluely-accent-teal/10 border border-cluely-accent-teal/20">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5 text-cluely-accent-teal">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
-              </svg>
+          <div className="flex items-start gap-2.5">
+            <div className="p-1.5 rounded-lg bg-teal-500/10 border border-teal-500/20 flex-shrink-0">
+              <TbMicrophone size={14} className="text-teal-400" />
             </div>
-            <div className="flex-1">
-              <p className="text-[10px] font-semibold text-cluely-accent-teal uppercase tracking-wide mb-1">AI Audio Analysis</p>
-              <div className="audio-markdown-content text-[11px] leading-relaxed text-cluely-text-primary">
+            <div className="flex-1 pr-6">
+              <p className="text-[10px] font-medium text-teal-400 mb-1.5">Audio Transcription</p>
+              <div className="text-[11px] leading-relaxed text-gray-300">
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm]}
                   components={{
                     p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-                    strong: ({node, ...props}) => <strong className="font-semibold text-cluely-accent-teal" {...props} />,
-                    em: ({node, ...props}) => <em className="italic text-cluely-text-secondary" {...props} />,
+                    strong: ({node, ...props}) => <strong className="font-semibold text-white" {...props} />,
+                    em: ({node, ...props}) => <em className="italic text-gray-400" {...props} />,
                     code: ({node, className, ...props}) => {
                       const isInline = !className?.includes('language-')
                       return isInline ? (
-                        <code className="bg-cluely-dark-bg/70 px-1.5 py-0.5 rounded text-[10px] font-mono border border-white/10 text-cluely-accent-cyan" {...props} />
+                        <code className="bg-black/30 px-1.5 py-0.5 rounded text-[10px] font-mono text-teal-400" {...props} />
                       ) : (
-                        <code className="block bg-cluely-dark-bg/70 p-2 rounded-lg text-[10px] font-mono overflow-x-auto my-1.5 border border-white/10" {...props} />
+                        <code className="block bg-black/30 p-2 rounded text-[10px] font-mono overflow-x-auto my-1.5" {...props} />
                       )
                     },
-                    ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-0.5 text-cluely-text-secondary ml-2" {...props} />,
-                    ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-0.5 text-cluely-text-secondary ml-2" {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-0.5 ml-2" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-0.5 ml-2" {...props} />,
                     li: ({node, ...props}) => <li className="text-[10px]" {...props} />,
-                    h1: ({node, ...props}) => <h1 className="text-xs font-semibold mb-1.5 text-cluely-accent-teal" {...props} />,
-                    h2: ({node, ...props}) => <h2 className="text-[11px] font-semibold mb-1.5 text-cluely-accent-teal" {...props} />,
-                    h3: ({node, ...props}) => <h3 className="text-[10px] font-medium mb-1 text-cluely-text-primary" {...props} />,
                   }}
                 >
                   {audioResult}

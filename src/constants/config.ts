@@ -37,7 +37,7 @@ interface AppConfig {
  * Get the current environment
  */
 export function getEnvironment(): Environment {
-  const env = process.env.NODE_ENV as Environment;
+  const env = import.meta.env.MODE as Environment;
   if (env === 'development' || env === 'production' || env === 'test') {
     return env;
   }
@@ -69,16 +69,16 @@ export function isTest(): boolean {
  * Get environment variable with fallback
  */
 function getEnvVar(key: string, fallback: string = ''): string {
-  return process.env[key] || fallback;
+  return import.meta.env[key] || fallback;
 }
 
 /**
  * Get boolean environment variable
  */
 function getEnvBool(key: string, fallback: boolean = false): boolean {
-  const value = process.env[key];
+  const value = import.meta.env[key];
   if (value === undefined) return fallback;
-  return value === 'true' || value === '1';
+  return value === 'true' || value === '1' || value === true;
 }
 
 /**

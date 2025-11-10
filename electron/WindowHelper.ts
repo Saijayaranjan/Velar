@@ -1,6 +1,7 @@
 
 import { BrowserWindow, screen, nativeImage } from "electron"
 import { AppState } from "main"
+import { logger } from "./Logger"
 import path from "node:path"
 
 const isDev = process.env.NODE_ENV === "development"
@@ -8,6 +9,11 @@ const isDev = process.env.NODE_ENV === "development"
 const startUrl = isDev
   ? "http://localhost:5180"
   : `file://${path.join(__dirname, "../dist/index.html")}`
+
+// Log the URL for debugging
+console.log("WindowHelper startUrl:", startUrl)
+console.log("WindowHelper __dirname:", __dirname)
+console.log("WindowHelper isDev:", isDev)
 
 export class WindowHelper {
   private mainWindow: BrowserWindow | null = null
@@ -51,18 +57,29 @@ export class WindowHelper {
     const maxX = workArea.width - newWidth
     const newX = Math.min(Math.max(currentX, 0), maxX)
 
+    // Keep Y position stable - only adjust if window would go off bottom of screen
+    let newY = currentY
+    const bottomEdge = currentY + newHeight
+    if (bottomEdge > workArea.height) {
+      // Window would go off bottom, move it up just enough
+      newY = workArea.height - newHeight
+      // But don't go above 0
+      newY = Math.max(0, newY)
+    }
+
     // Update window bounds
     this.mainWindow.setBounds({
       x: newX,
-      y: currentY,
+      y: newY,
       width: newWidth,
       height: newHeight
     })
 
     // Update internal state
-    this.windowPosition = { x: newX, y: currentY }
+    this.windowPosition = { x: newX, y: newY }
     this.windowSize = { width: newWidth, height: newHeight }
     this.currentX = newX
+    this.currentY = newY
   }
 
   public createWindow(): void {
@@ -86,7 +103,7 @@ export class WindowHelper {
       }
       appIcon = nativeImage.createFromPath(iconPath)
     } catch (error) {
-      console.log("Could not load app icon:", error)
+      logger.warn("Could not load app icon", { error })
     }
     
     const windowSettings: Electron.BrowserWindowConstructorOptions = {
@@ -99,13 +116,13 @@ export class WindowHelper {
         contextIsolation: true,
         preload: path.join(__dirname, "preload.js")
       },
-      show: false, // Start hidden, then show after setup
+      show: false, // Start hidden, show after ready
       alwaysOnTop: true,
-      frame: false,
-      transparent: true,
+      frame: false, // Frameless window - no native controls
+      transparent: true, // Fully transparent for glass effect
       fullscreenable: false,
       hasShadow: false,
-      backgroundColor: "#00000000",
+      backgroundColor: "#00000000", // Fully transparent
       focusable: true,
       resizable: true,
       movable: true,
@@ -119,8 +136,11 @@ export class WindowHelper {
     }
 
     this.mainWindow = new BrowserWindow(windowSettings)
-    // this.mainWindow.webContents.openDevTools()
-    this.mainWindow.setContentProtection(true)
+    // this.mainWindow.webContents.openDevTools() // Enable DevTools for debugging
+    // Disable content protection in development to allow paste operations
+    if (!isDev) {
+      this.mainWindow.setContentProtection(true)
+    }
 
     if (process.platform === "darwin") {
       this.mainWindow.setVisibleOnAllWorkspaces(true, {
@@ -140,7 +160,51 @@ export class WindowHelper {
     this.mainWindow.setSkipTaskbar(true)
     this.mainWindow.setAlwaysOnTop(true)
 
+    // Enable context menu for input fields (cut, copy, paste)
+    this.mainWindow.webContents.on('context-menu', (event, params) => {
+      const { Menu, MenuItem } = require('electron')
+      const menu = new Menu()
+
+      // Add each spelling suggestion as a menu item
+      for (const suggestion of params.dictionarySuggestions) {
+        menu.append(new MenuItem({
+          label: suggestion,
+          click: () => this.mainWindow?.webContents.replaceMisspelling(suggestion)
+        }))
+      }
+
+      // Allow users to add the misspelled word to the dictionary
+      if (params.misspelledWord) {
+        menu.append(
+          new MenuItem({
+            label: 'Add to dictionary',
+            click: () => this.mainWindow?.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
+          })
+        )
+      }
+
+      // Add separator if we have spelling suggestions
+      if (params.dictionarySuggestions.length > 0 || params.misspelledWord) {
+        menu.append(new MenuItem({ type: 'separator' }))
+      }
+
+      // Add standard editing options for input fields
+      if (params.isEditable) {
+        menu.append(new MenuItem({ label: 'Cut', role: 'cut', enabled: params.editFlags.canCut }))
+        menu.append(new MenuItem({ label: 'Copy', role: 'copy', enabled: params.editFlags.canCopy }))
+        menu.append(new MenuItem({ label: 'Paste', role: 'paste', enabled: params.editFlags.canPaste }))
+        menu.append(new MenuItem({ type: 'separator' }))
+        menu.append(new MenuItem({ label: 'Select All', role: 'selectAll' }))
+      }
+
+      // Show the menu only if it has items
+      if (menu.items.length > 0) {
+        menu.popup()
+      }
+    })
+
     this.mainWindow.loadURL(startUrl).catch((err) => {
+      logger.error("Failed to load URL", { error: err })
       console.error("Failed to load URL:", err)
     })
 
@@ -152,9 +216,21 @@ export class WindowHelper {
         this.mainWindow.show()
         this.mainWindow.focus()
         this.mainWindow.setAlwaysOnTop(true)
-        console.log("Window is now visible and centered")
+        logger.debug("Window is now visible and centered")
+        console.log("Window shown via ready-to-show event")
       }
     })
+
+    // Fallback: Show window after 2 seconds if ready-to-show doesn't fire
+    setTimeout(() => {
+      if (this.mainWindow && !this.isWindowVisible) {
+        console.log("Fallback: Showing window after timeout")
+        this.centerWindow()
+        this.mainWindow.show()
+        this.mainWindow.focus()
+        this.isWindowVisible = true
+      }
+    }, 2000)
 
     const bounds = this.mainWindow.getBounds()
     this.windowPosition = { x: bounds.x, y: bounds.y }
@@ -186,10 +262,16 @@ export class WindowHelper {
     })
 
     this.mainWindow.on("closed", () => {
+      logger.debug("Main window closed, cleaning up window resources")
       this.mainWindow = null
       this.isWindowVisible = false
       this.windowPosition = null
       this.windowSize = null
+    })
+
+    // Cleanup on window close
+    this.mainWindow.on("close", () => {
+      logger.debug("Main window closing, preparing cleanup")
     })
   }
 
@@ -203,7 +285,7 @@ export class WindowHelper {
 
   public hideMainWindow(): void {
     if (!this.mainWindow || this.mainWindow.isDestroyed()) {
-      console.warn("Main window does not exist or is destroyed.")
+      logger.warn("Main window does not exist or is destroyed")
       return
     }
 
@@ -218,7 +300,7 @@ export class WindowHelper {
 
   public showMainWindow(): void {
     if (!this.mainWindow || this.mainWindow.isDestroyed()) {
-      console.warn("Main window does not exist or is destroyed.")
+      logger.warn("Main window does not exist or is destroyed")
       return
     }
 
@@ -279,7 +361,7 @@ export class WindowHelper {
 
   public centerAndShowWindow(): void {
     if (!this.mainWindow || this.mainWindow.isDestroyed()) {
-      console.warn("Main window does not exist or is destroyed.")
+      logger.warn("Main window does not exist or is destroyed")
       return
     }
 
@@ -289,7 +371,7 @@ export class WindowHelper {
     this.mainWindow.setAlwaysOnTop(true)
     this.isWindowVisible = true
     
-    console.log(`Window centered and shown`)
+    logger.debug("Window centered and shown")
   }
 
   // New methods for window movement
@@ -388,7 +470,7 @@ export class WindowHelper {
           // @ts-ignore - using private API for advanced screen capture evasion
           this.mainWindow.setWindowButtonVisibility(false)
         } catch (e) {
-          console.log('Could not modify window buttons')
+          logger.debug('Could not modify window buttons')
         }
       }
       
@@ -400,7 +482,7 @@ export class WindowHelper {
           this.mainWindow.setSkipTaskbar(true)
           this.mainWindow.setAlwaysOnTop(true, 'screen-saver')
         } catch (e) {
-          console.log('Windows capture evasion limited')
+          logger.debug('Windows capture evasion limited')
         }
       }
       

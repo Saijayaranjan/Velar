@@ -7,11 +7,19 @@
     "dev": "vite",
     "build": "npm run clean && npx tsc -p electron/tsconfig.json && vite build",
     "preview": "vite preview",
-    "postinstall": "cross-env SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm rebuild sharp",
+    "postinstall": "electron-builder install-app-deps",
     "electron:dev": "tsc -p electron/tsconfig.json && cross-env NODE_ENV=development electron .",
     "electron:build": "tsc -p electron/tsconfig.json && cross-env NODE_ENV=production electron .",
     "app:dev": "concurrently \"npm run dev -- --port 5180\" \"wait-on http://localhost:5180 && npm run electron:dev\"",
     "app:build": "npm run build && electron-builder",
+    "app:build:mac": "npm run build && electron-builder --mac",
+    "app:build:mac:arm64": "npm run build && electron-builder --mac --arm64",
+    "app:build:mac:x64": "npm run build && electron-builder --mac --x64",
+    "verify:native": "node scripts/verify-native-modules.js",
+    "verify:build-config": "node scripts/verify-build-config.js",
+    "detect:arch": "node scripts/detect-arch.js",
+    "analyze:bundle": "node scripts/analyze-bundle.js",
+    "optimize:images": "node scripts/optimize-images.js",
     "watch": "tsc -p electron/tsconfig.json --watch",
     "start": "npm run app:dev",
     "dist": "npm run app:build"
@@ -23,7 +31,22 @@
       "dist/**/*",
       "dist-electron/**/*",
       "package.json",
-      "node_modules/**/*"
+      "!node_modules/**/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!node_modules/**/{test,__tests__,tests,powered-test,example,examples}",
+      "!node_modules/**/*.d.ts",
+      "!node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "asarUnpack": [
+      "node_modules/sharp/**/*",
+      "node_modules/canvas/**/*",
+      "node_modules/screenshot-desktop/**/*"
     ],
     "directories": {
       "output": "release",
@@ -35,6 +58,7 @@
         "to": "assets/"
       }
     ],
+    "afterSign": "scripts/notarize.js",
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "assets/icons/velar_icon.icns",
@@ -46,7 +70,11 @@
             "arm64"
           ]
         }
-      ]
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "win": {
       "icon": "assets/icons/velar_icon.ico",
@@ -112,6 +140,7 @@
   "license": "CC-BY-NC-4.0",
   "description": "Velar - Free Cluely Alternative. AI-Powered Screenshot Analysis & Debugging Assistant",
   "devDependencies": {
+    "@electron/notarize": "^2.5.0",
     "@types/color": "^4.2.0",
     "@types/diff": "^6.0.0",
     "@types/dotenv": "^8.2.3",
@@ -122,13 +151,13 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/screenshot-desktop": "^1.12.3",
     "@types/uuid": "^9.0.8",
+    "@types/winston": "^2.4.4",
     "@typescript-eslint/eslint-plugin": "^8.14.0",
     "@typescript-eslint/parser": "^8.14.0",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
-    "dotenv": "^17.2.3",
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
     "electron-icon-builder": "^2.0.1",
@@ -153,6 +182,8 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "diff": "^7.0.0",
+    "dotenv": "^17.2.3",
+    "electron-updater": "^6.6.2",
     "form-data": "^4.0.1",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",
@@ -167,6 +198,8 @@
     "sharp": "^0.33.5",
     "tailwind-merge": "^2.5.4",
     "tesseract.js": "^5.0.5",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }

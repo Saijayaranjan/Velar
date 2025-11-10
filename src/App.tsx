@@ -3,7 +3,10 @@ import Queue from "./_pages/Queue"
 import { ToastViewport } from "@radix-ui/react-toast"
 import { useEffect, useRef, useState } from "react"
 import Solutions from "./_pages/Solutions"
+import { Setup } from "./_pages/Setup"
 import { QueryClient, QueryClientProvider } from "react-query"
+import { ErrorBoundary } from "./components/ErrorBoundary"
+import { UpdateNotification } from "./components/UpdateNotification"
 
 declare global {
   interface Window {
@@ -58,6 +61,19 @@ declare global {
       switchToGemini: (apiKey?: string, model?: string) => Promise<{ success: boolean; error?: string }>
       switchGeminiModel: (model: string) => Promise<{ success: boolean; error?: string }>
       testLlmConnection: () => Promise<{ success: boolean; error?: string; capabilities?: { text: boolean; image: boolean; audio: boolean } }>
+      onShowSetupWizard: (callback: () => void) => () => void
+      
+      // Update management
+      checkForUpdates: (silent?: boolean) => Promise<{ success: boolean; error?: string }>
+      downloadUpdate: () => Promise<{ success: boolean; error?: string }>
+      installUpdate: () => Promise<{ success: boolean; error?: string }>
+      getAppVersion: () => Promise<{ success: boolean; version?: string; error?: string }>
+      onUpdateChecking: (callback: () => void) => () => void
+      onUpdateAvailable: (callback: (info: { version: string; releaseNotes?: string; releaseDate?: string }) => void) => () => void
+      onUpdateNotAvailable: (callback: (info: { version: string }) => void) => () => void
+      onUpdateDownloadProgress: (callback: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void) => () => void
+      onUpdateDownloaded: (callback: (info: { version: string; releaseNotes?: string }) => void) => () => void
+      onUpdateError: (callback: (error: { message: string }) => void) => () => void
       
       invoke: (channel: string, ...args: any[]) => Promise<any>
     }
@@ -75,7 +91,33 @@ const queryClient = new QueryClient({
 
 const App: React.FC = () => {
   const [view, setView] = useState<"queue" | "solutions" | "debug">("queue")
+  const [showSetup, setShowSetup] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Check if setup is needed on mount
+  useEffect(() => {
+    const checkSetup = async () => {
+      try {
+        const result = await window.electronAPI.invoke('config:is-first-run')
+        if (result.success && result.isFirstRun) {
+          setShowSetup(true)
+        }
+      } catch (error) {
+        console.error("Error checking first run:", error)
+      }
+    }
+    
+    checkSetup()
+    
+    // Listen for setup wizard event from main process
+    const unsubscribe = window.electronAPI.onShowSetupWizard(() => {
+      setShowSetup(true)
+    })
+    
+    return () => {
+      unsubscribe()
+    }
+  }, [])
 
   // Effect for height monitoring
   useEffect(() => {
@@ -166,21 +208,37 @@ const App: React.FC = () => {
     return () => cleanupFunctions.forEach((cleanup) => cleanup())
   }, [])
 
+  const handleSetupComplete = () => {
+    setShowSetup(false)
+    setView("queue")
+  }
+
   return (
-    <div ref={containerRef} className="min-h-0">
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          {view === "queue" ? (
-            <Queue setView={setView} />
-          ) : view === "solutions" ? (
-            <Solutions setView={setView} />
-          ) : (
-            <></>
-          )}
-          <ToastViewport />
-        </ToastProvider>
-      </QueryClientProvider>
-    </div>
+    <ErrorBoundary>
+      <div ref={containerRef} className="min-h-0">
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            {showSetup ? (
+              <ErrorBoundary>
+                <Setup onComplete={handleSetupComplete} />
+              </ErrorBoundary>
+            ) : view === "queue" ? (
+              <ErrorBoundary>
+                <Queue setView={setView} />
+              </ErrorBoundary>
+            ) : view === "solutions" ? (
+              <ErrorBoundary>
+                <Solutions setView={setView} />
+              </ErrorBoundary>
+            ) : (
+              <></>
+            )}
+            <ToastViewport />
+            <UpdateNotification />
+          </ToastProvider>
+        </QueryClientProvider>
+      </div>
+    </ErrorBoundary>
   )
 }
 

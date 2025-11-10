@@ -36,6 +36,19 @@ export interface ElectronAPI {
   switchGeminiModel: (model: string) => Promise<{ success: boolean; error?: string }>
   testLlmConnection: () => Promise<{ success: boolean; error?: string; capabilities?: { text: boolean; image: boolean; audio: boolean } }>
   invoke: (channel: string, ...args: any[]) => Promise<any>
+  onShowSetupWizard: (callback: () => void) => () => void
+  
+  // Update management
+  checkForUpdates: (silent?: boolean) => Promise<{ success: boolean; error?: string }>
+  downloadUpdate: () => Promise<{ success: boolean; error?: string }>
+  installUpdate: () => Promise<{ success: boolean; error?: string }>
+  getAppVersion: () => Promise<{ success: boolean; version?: string; error?: string }>
+  onUpdateChecking: (callback: () => void) => () => void
+  onUpdateAvailable: (callback: (info: { version: string; releaseNotes?: string; releaseDate?: string }) => void) => () => void
+  onUpdateNotAvailable: (callback: (info: { version: string }) => void) => () => void
+  onUpdateDownloadProgress: (callback: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void) => () => void
+  onUpdateDownloaded: (callback: (info: { version: string; releaseNotes?: string }) => void) => () => void
+  onUpdateError: (callback: (error: { message: string }) => void) => () => void
 }
 
 declare global {

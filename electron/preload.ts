@@ -36,6 +36,8 @@ interface ElectronAPI {
   analyzeImageFile: (path: string) => Promise<void>
   quitApp: () => Promise<void>
   onInvisibilityModeChanged: (callback: (isInvisible: boolean) => void) => () => void
+  onToggleRecording: (callback: () => void) => () => void
+  onShowSetupWizard: (callback: () => void) => () => void
   
   // LLM Model Management
   getCurrentLlmConfig: () => Promise<{ provider: "ollama" | "gemini"; model: string; isOllama: boolean }>
@@ -46,6 +48,18 @@ interface ElectronAPI {
   switchToGemini: (apiKey?: string, model?: string) => Promise<{ success: boolean; error?: string }>
   switchGeminiModel: (model: string) => Promise<{ success: boolean; error?: string }>
   testLlmConnection: () => Promise<{ success: boolean; error?: string; capabilities?: { text: boolean; image: boolean; audio: boolean } }>
+  
+  // Update management
+  checkForUpdates: (silent?: boolean) => Promise<{ success: boolean; error?: string }>
+  downloadUpdate: () => Promise<{ success: boolean; error?: string }>
+  installUpdate: () => Promise<{ success: boolean; error?: string }>
+  getAppVersion: () => Promise<{ success: boolean; version?: string; error?: string }>
+  onUpdateChecking: (callback: () => void) => () => void
+  onUpdateAvailable: (callback: (info: { version: string; releaseNotes?: string; releaseDate?: string }) => void) => () => void
+  onUpdateNotAvailable: (callback: (info: { version: string }) => void) => () => void
+  onUpdateDownloadProgress: (callback: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void) => () => void
+  onUpdateDownloaded: (callback: (info: { version: string; releaseNotes?: string }) => void) => () => void
+  onUpdateError: (callback: (error: { message: string }) => void) => () => void
   
   invoke: (channel: string, ...args: any[]) => Promise<any>
 }
@@ -200,6 +214,30 @@ contextBridge.exposeInMainWorld("electronAPI", {
     }
   },
   
+  onToggleRecording: (callback: () => void) => {
+    const subscription = () => callback()
+    ipcRenderer.on("toggle-recording", subscription)
+    return () => {
+      ipcRenderer.removeListener("toggle-recording", subscription)
+    }
+  },
+  
+  onToggleChat: (callback: () => void) => {
+    const subscription = () => callback()
+    ipcRenderer.on("toggle-chat", subscription)
+    return () => {
+      ipcRenderer.removeListener("toggle-chat", subscription)
+    }
+  },
+  
+  onShowSetupWizard: (callback: () => void) => {
+    const subscription = () => callback()
+    ipcRenderer.on("show-setup-wizard", subscription)
+    return () => {
+      ipcRenderer.removeListener("show-setup-wizard", subscription)
+    }
+  },
+  
   // LLM Model Management
   getCurrentLlmConfig: () => ipcRenderer.invoke("get-current-llm-config"),
   getAvailableOllamaModels: () => ipcRenderer.invoke("get-available-ollama-models"),
@@ -209,6 +247,60 @@ contextBridge.exposeInMainWorld("electronAPI", {
   switchToGemini: (apiKey?: string, model?: string) => ipcRenderer.invoke("switch-to-gemini", apiKey, model),
   switchGeminiModel: (model: string) => ipcRenderer.invoke("switch-gemini-model", model),
   testLlmConnection: () => ipcRenderer.invoke("test-llm-connection"),
+  
+  // Update management
+  checkForUpdates: (silent?: boolean) => ipcRenderer.invoke("check-for-updates", silent),
+  downloadUpdate: () => ipcRenderer.invoke("download-update"),
+  installUpdate: () => ipcRenderer.invoke("install-update"),
+  getAppVersion: () => ipcRenderer.invoke("get-app-version"),
+  
+  onUpdateChecking: (callback: () => void) => {
+    const subscription = () => callback()
+    ipcRenderer.on("update-checking", subscription)
+    return () => {
+      ipcRenderer.removeListener("update-checking", subscription)
+    }
+  },
+  
+  onUpdateAvailable: (callback: (info: { version: string; releaseNotes?: string; releaseDate?: string }) => void) => {
+    const subscription = (_: any, info: { version: string; releaseNotes?: string; releaseDate?: string }) => callback(info)
+    ipcRenderer.on("update-available", subscription)
+    return () => {
+      ipcRenderer.removeListener("update-available", subscription)
+    }
+  },
+  
+  onUpdateNotAvailable: (callback: (info: { version: string }) => void) => {
+    const subscription = (_: any, info: { version: string }) => callback(info)
+    ipcRenderer.on("update-not-available", subscription)
+    return () => {
+      ipcRenderer.removeListener("update-not-available", subscription)
+    }
+  },
+  
+  onUpdateDownloadProgress: (callback: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void) => {
+    const subscription = (_: any, progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => callback(progress)
+    ipcRenderer.on("update-download-progress", subscription)
+    return () => {
+      ipcRenderer.removeListener("update-download-progress", subscription)
+    }
+  },
+  
+  onUpdateDownloaded: (callback: (info: { version: string; releaseNotes?: string }) => void) => {
+    const subscription = (_: any, info: { version: string; releaseNotes?: string }) => callback(info)
+    ipcRenderer.on("update-downloaded", subscription)
+    return () => {
+      ipcRenderer.removeListener("update-downloaded", subscription)
+    }
+  },
+  
+  onUpdateError: (callback: (error: { message: string }) => void) => {
+    const subscription = (_: any, error: { message: string }) => callback(error)
+    ipcRenderer.on("update-error", subscription)
+    return () => {
+      ipcRenderer.removeListener("update-error", subscription)
+    }
+  },
   
   invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args)
 } as ElectronAPI)

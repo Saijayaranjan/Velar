@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cloud, Home, RefreshCw, Loader2, BarChart3, Info, Key, CheckCircle2, XCircle, Settings } from 'lucide-react';
+import { TbCloud, TbHome, TbRefresh, TbSettings, TbCircleCheck, TbCircleX, TbInfoCircle, TbKey, TbChartBar, TbLoader } from 'react-icons/tb';
 
 interface ModelConfig {
   provider: "ollama" | "gemini";
@@ -205,7 +205,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-gradient-to-br from-cluely-accent-teal/20 to-cluely-accent-cyan/10 border border-cluely-accent-teal/30">
-            <Settings size={15} className="text-cluely-accent-teal" />
+            <TbSettings size={15} className="text-cluely-accent-teal" />
           </div>
           <h3 className="text-sm font-semibold text-cluely-text-primary">Settings</h3>
         </div>
@@ -220,8 +220,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
           <div className="flex items-center gap-2">
             <div className={`p-1.5 rounded-lg ${currentConfig.provider === 'ollama' ? 'bg-green-500/10' : 'bg-cluely-accent-teal/10'}`}>
               {currentConfig.provider === 'ollama' ? 
-                <Home size={12} className="text-green-400" /> : 
-                <Cloud size={12} className="text-cluely-accent-teal" />
+                <TbHome size={12} className="text-green-400" /> : 
+                <TbCloud size={12} className="text-cluely-accent-teal" />
               }
             </div>
             <div>
@@ -242,7 +242,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
               selectedProvider === 'gemini' ? 'provider-active-teal' : ''
             }`}
           >
-            <Cloud size={14} />
+            <TbCloud size={14} />
             <div className="text-left">
               <div className="text-[10px] font-medium">Gemini - Cloud AI</div>
             </div>
@@ -253,7 +253,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
               selectedProvider === 'ollama' ? 'provider-active-green' : ''
             }`}
           >
-            <Home size={14} />
+            <TbHome size={14} />
             <div className="text-left">
               <div className="text-[10px] font-medium">Ollama - Local AI</div>
             </div>
@@ -285,7 +285,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
               </label>
               {availableGeminiModels.find(m => m.id === selectedGeminiModel) && (
                 <div className="group relative">
-                  <Info size={10} className="text-cluely-text-muted hover:text-cluely-accent-teal cursor-help transition-colors" />
+                  <TbInfoCircle size={10} className="text-cluely-text-muted hover:text-cluely-accent-teal cursor-help transition-colors" />
                   <div className="absolute right-0 top-full mt-1 w-64 bg-cluely-dark-card border border-white/10 rounded-lg p-2.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-xl">
                     <p className="text-[10px] text-cluely-text-primary font-medium mb-1">
                       {selectedGeminiModel}
@@ -306,14 +306,14 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
             {/* Status messages */}
             {fetchSuccess && (
               <div className="status-message success">
-                <CheckCircle2 size={11} />
+                <TbCircleCheck size={11} />
                 <span>{fetchSuccess}</span>
               </div>
             )}
             
             {errorMessage && !fetchSuccess && (
               <div className="status-message error">
-                <XCircle size={11} />
+                <TbCircleX size={11} />
                 <span>{errorMessage}</span>
               </div>
             )}
@@ -337,9 +337,9 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
                 title="Fetch latest models from API"
               >
                 {isLoadingGeminiModels ? (
-                  <Loader2 size={10} className="animate-spin" />
+                  <TbLoader size={10} className="animate-spin" />
                 ) : (
-                  <RefreshCw size={10} />
+                  <TbRefresh size={10} />
                 )}
               </button>
             </div>
@@ -349,7 +349,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
         <div className="space-y-2.5 settings-provider-section">
           <div>
             <label className="settings-label">
-              <Home size={10} className="text-green-400" />
+              <TbHome size={10} className="text-green-400" />
               <span>Ollama Server URL</span>
             </label>
             <input
@@ -363,7 +363,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
           
           <div>
             <label className="settings-label mb-1.5">
-              <BarChart3 size={10} className="text-green-400" />
+              <TbChartBar size={10} className="text-green-400" />
               <span>Model Selection</span>
             </label>
             
@@ -385,12 +385,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
                   className="modern-refresh-button green"
                   title="Refresh available models"
                 >
-                  <RefreshCw size={10} />
+                  <TbRefresh size={10} />
                 </button>
               </div>
             ) : (
               <div className="status-message warning">
-                <Info size={11} />
+                <TbInfoCircle size={11} />
                 <span>No models found. Ensure Ollama is running and models are installed.</span>
               </div>
             )}
@@ -407,12 +407,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
         >
           {connectionStatus === 'testing' ? (
             <>
-              <Loader2 size={12} className="animate-spin" />
+              <TbLoader size={12} className="animate-spin" />
               <span>Applying...</span>
             </>
           ) : (
             <>
-              <CheckCircle2 size={12} />
+              <TbCircleCheck size={12} />
               <span>Apply Changes</span>
             </>
           )}
@@ -423,7 +423,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
           disabled={connectionStatus === 'testing'}
           className="modern-action-button secondary"
         >
-          <RefreshCw size={12} />
+          <TbRefresh size={12} />
           <span>Test Connection</span>
         </button>
       </div>
@@ -431,14 +431,14 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
       {/* Help section */}
       <div className="settings-help-section">
         <div className="help-item">
-          <Cloud size={10} className="text-cluely-accent-teal flex-shrink-0" />
+          <TbCloud size={10} className="text-cluely-accent-teal flex-shrink-0" />
           <div>
             <span className="font-medium">Gemini</span>
             <span className="opacity-70"> - Google's cloud AI with API authentication</span>
           </div>
         </div>
         <div className="help-item">
-          <Home size={10} className="text-green-400 flex-shrink-0" />
+          <TbHome size={10} className="text-green-400 flex-shrink-0" />
           <div>
             <span className="font-medium">Ollama</span>
             <span className="opacity-70"> - Run AI models locally on your machine</span>

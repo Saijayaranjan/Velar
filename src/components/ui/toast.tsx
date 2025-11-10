@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as ToastPrimitive from "@radix-ui/react-toast"
 import { cn } from "../../lib/utils"
-import { X } from "lucide-react"
+import { TbX } from "react-icons/tb"
 
 const ToastProvider = ToastPrimitive.Provider
 
@@ -79,7 +79,7 @@ const ToastClose = React.forwardRef<
     )}
     {...props}
   >
-    <X className="h-4 w-4" />
+    <TbX className="h-4 w-4" />
   </ToastPrimitive.Close>
 ))
 ToastClose.displayName = ToastPrimitive.Close.displayName

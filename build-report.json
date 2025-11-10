@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-11-10T17:24:16.488Z",
+  "renderer": {
+    "totalSize": 1137974,
+    "files": {
+      "assets/css/index-bh8ocZ2Y.css": 44230,
+      "assets/js/index-CXluWDLe.js": 83121,
+      "assets/js/markdown-vendor-CMUvuK_m.js": 789836,
+      "assets/js/react-vendor-DL2Qji2v.js": 179307,
+      "assets/js/ui-vendor-CjfyTE0W.js": 32359,
+      "assets/js/utils-vendor-DOK9ROJo.js": 7992,
+      "index.html": 1129
+    }
+  },
+  "electron": {
+    "totalSize": 242399
+  },
+  "total": 1380373
+}

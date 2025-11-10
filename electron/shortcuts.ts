@@ -1,5 +1,6 @@
 import { globalShortcut, app } from "electron"
 import { AppState } from "./main" // Adjust the import path if necessary
+import { logger } from "./Logger"
 
 export class ShortcutsHelper {
   private appState: AppState
@@ -11,14 +12,14 @@ export class ShortcutsHelper {
   public registerGlobalShortcuts(): void {
     // Add global shortcut to show/center window
     globalShortcut.register("CommandOrControl+Shift+Space", () => {
-      console.log("Show/Center window shortcut pressed...")
+      logger.debug("Show/Center window shortcut pressed")
       this.appState.centerAndShowWindow()
     })
 
     globalShortcut.register("CommandOrControl+H", async () => {
       const mainWindow = this.appState.getMainWindow()
       if (mainWindow) {
-        console.log("Taking screenshot...")
+        logger.debug("Taking screenshot via shortcut")
         try {
           const screenshotPath = await this.appState.takeScreenshot()
           const preview = await this.appState.getImagePreview(screenshotPath)
@@ -27,7 +28,7 @@ export class ShortcutsHelper {
             preview
           })
         } catch (error) {
-          console.error("Error capturing screenshot:", error)
+          logger.error("Error capturing screenshot", { error })
           
           // Send error to renderer process instead of showing dialog
           const errorMessage = error instanceof Error ? error.message : String(error)
@@ -41,9 +42,7 @@ export class ShortcutsHelper {
     })
 
     globalShortcut.register("CommandOrControl+R", () => {
-      console.log(
-        "Command + R pressed. Canceling requests and resetting queues..."
-      )
+      logger.debug("Command + R pressed. Canceling requests and resetting queues")
 
       // Cancel ongoing API requests
       this.appState.processingHelper.cancelOngoingRequests()
@@ -51,7 +50,7 @@ export class ShortcutsHelper {
       // Clear both screenshot queues
       this.appState.clearQueues()
 
-      console.log("Cleared queues.")
+      logger.debug("Cleared queues")
 
       // Update the view state to 'queue'
       this.appState.setView("queue")
@@ -65,20 +64,20 @@ export class ShortcutsHelper {
 
     // New shortcuts for moving the window
     globalShortcut.register("CommandOrControl+Left", () => {
-      console.log("Command/Ctrl + Left pressed. Moving window left.")
+      logger.debug("Command/Ctrl + Left pressed. Moving window left")
       this.appState.moveWindowLeft()
     })
 
     globalShortcut.register("CommandOrControl+Right", () => {
-      console.log("Command/Ctrl + Right pressed. Moving window right.")
+      logger.debug("Command/Ctrl + Right pressed. Moving window right")
       this.appState.moveWindowRight()
     })
     globalShortcut.register("CommandOrControl+Down", () => {
-      console.log("Command/Ctrl + down pressed. Moving window down.")
+      logger.debug("Command/Ctrl + down pressed. Moving window down")
       this.appState.moveWindowDown()
     })
     globalShortcut.register("CommandOrControl+Up", () => {
-      console.log("Command/Ctrl + Up pressed. Moving window Up.")
+      logger.debug("Command/Ctrl + Up pressed. Moving window Up")
       this.appState.moveWindowUp()
     })
 
@@ -102,13 +101,40 @@ export class ShortcutsHelper {
 
     // Invisibility Mode Toggle (Cluely Pro+ Feature)
     globalShortcut.register("CommandOrControl+I", () => {
-      console.log("Command/Ctrl + I pressed. Toggling invisibility mode.")
+      logger.debug("Command/Ctrl + I pressed. Toggling invisibility mode")
       this.appState.toggleInvisibilityMode()
+    })
+
+    // Audio Recording Toggle
+    globalShortcut.register("CommandOrControl+G", () => {
+      logger.debug("Command/Ctrl + G pressed. Toggling audio recording")
+      const mainWindow = this.appState.getMainWindow()
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("toggle-recording")
+      }
+    })
+
+    // Chat Toggle (Cmd+J)
+    globalShortcut.register("CommandOrControl+J", () => {
+      logger.debug("Command/Ctrl + J pressed. Toggling chat")
+      const mainWindow = this.appState.getMainWindow()
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("toggle-chat")
+      }
     })
 
     // Unregister shortcuts when quitting
     app.on("will-quit", () => {
-      globalShortcut.unregisterAll()
+      this.unregisterAll()
     })
+  }
+
+  /**
+   * Unregister all global shortcuts
+   * Called during application cleanup
+   */
+  public unregisterAll(): void {
+    logger.debug("Unregistering all global shortcuts")
+    globalShortcut.unregisterAll()
   }
 }

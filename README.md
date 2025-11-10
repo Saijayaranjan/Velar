@@ -1,267 +1,572 @@
-# Cluely
+<div align="center">
 
-[Cluely](https://cluely.com) - The invisible AI assistant that provides real-time insights, answers, and support during meetings, interviews, presentations, and professional conversations.
+<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icon.png" alt="Velar Logo" width="120" height="120" />
 
-## Sponsored by Recall AI - API for desktop recording
-If you’re looking for a hosted desktop recording API, consider checking out [Recall.ai](https://www.recall.ai/product/desktop-recording-sdk?utm_source=github&utm_medium=sponsorship&utm_campaign=prat011-free-cluely), an API that records Zoom, Google Meet, Microsoft Teams, in-person meetings, and more.
+# Velar - Free Cluely Alternative
 
-## 🚀 Quick Start Guide
+**The best free and open-source alternative to Cluely**
+
+Your intelligent AI-powered desktop assistant for real-time insights, debugging support, and professional assistance during meetings, interviews, presentations, and development work.
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
+![Free Alternative](https://img.shields.io/badge/Cluely-Free%20Alternative-brightgreen)
+
+</div>
+
+> **🎉 100% Free Cluely Alternative** - All the features you need without the subscription fees. Perfect for students, developers, and professionals looking for a privacy-focused, open-source interview assistant and meeting companion.
+
+---
+
+## ✨ Features
+
+### 🎯 Smart Screenshot Analysis
+- **Instant Capture**: Press `Cmd/Ctrl + H` to capture any screen content
+- **AI-Powered Analysis**: Get detailed explanations, solutions, and insights
+- **Queue Management**: Capture up to 5 screenshots for comprehensive context
+- **High-Quality Processing**: Optimized image processing with Sharp
+
+### 🤖 Dual AI Provider Support
+- **Gemini (Cloud AI)**: Latest Google AI technology for maximum accuracy
+- **Ollama (Local AI)**: 100% private, offline AI processing on your machine
+- **Seamless Switching**: Toggle between providers based on your needs
+- **Custom Models**: Support for any Ollama-compatible model
+
+### 🎙️ Audio Intelligence
+- **Voice Recording**: Record audio directly within the app
+- **AI Transcription**: Automatic transcription and analysis
+- **Meeting Notes**: Perfect for capturing meeting discussions
+- **Multi-format Support**: WebM, MP3, WAV, OGG
+
+### 💬 Contextual Chat
+- **AI Conversations**: Chat with AI about your screenshots
+- **Context Awareness**: AI understands your screen content
+- **Follow-up Questions**: Natural conversation flow
+- **Code Explanations**: Get detailed code analysis
+
+### 🔒 Privacy-First Design
+- **Privacy Mode**: `Cmd/Ctrl + I` to prevent screen capture detection
+- **Local Processing**: Use Ollama for 100% private AI
+- **No Data Storage**: Screenshots deleted after processing
+- **Transparent Operations**: Open source, audit-friendly
+
+### ⚡ Performance & UX
+- **Lightning Fast**: Optimized for minimal resource usage
+- **Always-On-Top**: Stays accessible without interrupting workflow
+- **Glass Morphism UI**: Modern, beautiful interface
+- **Keyboard Shortcuts**: Complete keyboard-driven workflow
+- **Cross-Platform**: Works on macOS, Windows, and Linux
+
+---
+
+## 🆚 Velar vs Cluely - Why Choose Velar?
+
+| Feature | Velar (Free) | Cluely (Paid) |
+|---------|--------------|---------------|
+| **Price** | 100% Free | $29-99/month |
+| **AI Options** | Gemini + Ollama (Local) | Cloud-only |
+| **Privacy** | 100% Local AI option | Cloud-based |
+| **Open Source** | ✅ Yes | ❌ No |
+| **Offline Mode** | ✅ Yes (Ollama) | ❌ No |
+| **Customizable** | ✅ Fully | ⚠️ Limited |
+| **Screenshot Analysis** | ✅ Yes | ✅ Yes |
+| **Audio Recording** | ✅ Yes | ✅ Yes |
+| **Chat Interface** | ✅ Yes | ✅ Yes |
+| **Data Ownership** | ✅ You own it | ❌ Third-party |
+| **No Subscription** | ✅ Forever | ❌ Monthly fees |
+
+**Velar is the perfect free alternative to Cluely** for students, developers, and professionals who want:
+- 💰 Zero subscription costs
+- 🔒 Complete privacy with local AI
+- 🛠️ Full customization and control
+- 📖 Open-source transparency
+- 🌐 Offline capability
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Make sure you have Node.js installed on your computer
-- Git installed on your computer  
-- **Either** a Gemini API key (get it from [Google AI Studio](https://makersuite.google.com/app/apikey))
-- **Or** Ollama installed locally for private LLM usage (recommended for privacy)
 
-### Installation Steps
+- **Node.js** (v18.0.0 or higher)
+- **npm** (v9.0.0 or higher)
+- **Git**
+- **AI Provider** (choose one or both):
+  - [Google AI Studio](https://makersuite.google.com/app/apikey) for Gemini API key
+  - [Ollama](https://ollama.ai) for local AI
 
-1. Clone the repository:
+### Installation
+
+#### 1. Clone the Repository
+
 ```bash
-git clone [repository-url]
-cd free-cluely
+git clone https://github.com/Saijayaranjan/Velar.git
+cd velar
 ```
 
-2. Install dependencies:
+#### 2. Install Dependencies
+
 ```bash
-# If you encounter Sharp/Python build errors, use this:
+# Standard installation
+npm install
+
+# If you encounter Sharp/Python build errors:
 SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --ignore-scripts
 npm rebuild sharp
-
-# Or for normal installation:
-npm install
 ```
 
-3. Set up environment variables:
-   - Create a file named `.env` in the root folder
-   
-   **For Gemini (Cloud AI):**
-   ```env
-   GEMINI_API_KEY=your_api_key_here
-   ```
-   
-   **For Ollama (Local/Private AI):**
-   ```env
-   USE_OLLAMA=true
-   OLLAMA_MODEL=llama3.2
-   OLLAMA_URL=http://localhost:11434
-   ```
-   
-   - Save the file
+#### 3. Configure Environment
 
-### Running the App
+Create a `.env` file in the root directory:
 
-#### Method 1: Development Mode (Recommended for first run)
-1. Start the development server:
+**For Gemini (Cloud AI):**
+```env
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+VITE_GEMINI_ENABLED=true
+```
+
+**For Ollama (Local AI):**
+```env
+VITE_OLLAMA_ENDPOINT=http://localhost:11434
+VITE_OLLAMA_ENABLED=true
+```
+
+**Optional Configuration:**
+```env
+VITE_LOG_LEVEL=info
+VITE_ENABLE_DEVTOOLS=false
+```
+
+#### 4. Run the Application
+
+**Development Mode:**
 ```bash
 npm start
 ```
 
-This command automatically:
-- Starts the Vite dev server on port 5180
-- Waits for the server to be ready
-- Launches the Electron app
+This will:
+- Start Vite dev server on port 5180
+- Compile Electron TypeScript
+- Launch the Electron app with hot reload
 
-#### Method 2: Production Build
+**Production Build:**
 ```bash
 npm run dist
 ```
-The built app will be in the `release` folder.
 
-## 🤖 AI Provider Options
+Built application will be in the `release/` folder.
 
-### Ollama (Recommended for Privacy)
+### macOS Screen Recording Permission
+
+On first screenshot attempt (`Cmd+H`), macOS will request Screen Recording permission:
+
+1. Open **System Settings** > **Privacy & Security** > **Screen Recording**
+2. Enable **Velar** or **Electron**
+3. Restart the app
+
+*Without this permission, screenshots will fail with "could not create image from display" error.*
+
+---
+
+## 🎮 Usage
+
+### Keyboard Shortcuts
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `Cmd/Ctrl + H` | Take Screenshot | Capture current screen content |
+| `Cmd/Ctrl + Enter` | Analyze | Process screenshots with AI |
+| `Cmd/Ctrl + I` | Privacy Mode | Toggle screen capture prevention |
+| `Cmd/Ctrl + B` | Toggle Window | Show/hide application window |
+| `Cmd/Ctrl + 1-3` | Navigate | Switch between Queue/Debug/Solutions |
+| `Cmd/Ctrl + R` | Refresh | Restart current page |
+| `Cmd/Ctrl + Q` | Quit | Close application |
+
+### Workflow
+
+1. **Capture Context**
+   - Press `Cmd/Ctrl + H` to take screenshots
+   - Capture up to 5 screenshots for full context
+   - Screenshots appear in the queue instantly
+
+2. **Get AI Analysis**
+   - Press `Cmd/Ctrl + Enter` to analyze
+   - AI processes all queued screenshots
+   - Get detailed explanations and solutions
+
+3. **Chat with AI**
+   - Click the chat icon or use the chat panel
+   - Ask follow-up questions
+   - Get clarifications and deeper insights
+
+4. **Record Audio** (Optional)
+   - Click the microphone icon
+   - Record voice notes or meeting audio
+   - Get AI transcription and analysis
+
+---
+
+## 🤖 AI Providers
+
+### Gemini (Cloud AI)
+
 **Pros:**
-- 100% private - data never leaves your computer
-- No API costs
-- Works offline
-- Supports many models: llama3.2, codellama, mistral, etc.
-
-**Setup:**
-1. Install Ollama from [ollama.ai](https://ollama.ai)
-2. Pull a model: `ollama pull llama3.2`
-3. Set environment variables as shown above
-
-### Google Gemini
-**Pros:**
-- Latest AI technology
-- Fastest responses
-- Best accuracy for complex tasks
+- ✅ Latest Google AI technology
+- ✅ Best accuracy for complex tasks
+- ✅ Fast response times
+- ✅ Excellent vision capabilities
 
 **Cons:**
-- Requires API key and internet
-- Data sent to Google servers
-- Usage costs apply
+- ⚠️ Requires internet connection
+- ⚠️ Data sent to Google servers
+- ⚠️ Usage costs apply (free tier available)
 
-### ⚠️ Important Notes
+**Setup:**
+1. Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Add to `.env`: `VITE_GEMINI_API_KEY=your_key`
+3. Select "Gemini - Cloud AI" in settings
 
-1. **Closing the App**: 
-   - Press `Cmd + Q` (Mac) or `Ctrl + Q` (Windows/Linux) to quit
-   - Or use Activity Monitor/Task Manager to close `Interview Coder`
-   - The X button currently doesn't work (known issue)
+### Ollama (Local AI)
 
-2. **If the app doesn't start**:
-   - Make sure no other app is using port 5180
-   - Try killing existing processes:
-     ```bash
-     # Find processes using port 5180
-     lsof -i :5180
-     # Kill them (replace [PID] with the process ID)
-     kill [PID]
-     ```
-   - For Ollama users: Make sure Ollama is running (`ollama serve`)
+**Pros:**
+- ✅ 100% private - data never leaves your computer
+- ✅ No API costs
+- ✅ Works offline
+- ✅ Multiple model support
 
-3. **Keyboard Shortcuts**:
-   - `Cmd/Ctrl + B`: Toggle window visibility
-   - `Cmd/Ctrl + H`: Take screenshot
-   - 'Cmd/Enter': Get solution
-   - `Cmd/Ctrl + Arrow Keys`: Move window
+**Cons:**
+- ⚠️ Requires local installation
+- ⚠️ Higher resource usage (RAM/CPU)
+- ⚠️ Slightly slower than cloud AI
+
+**Setup:**
+1. Install Ollama: `brew install ollama` or download from [ollama.ai](https://ollama.ai)
+2. Pull a model: `ollama pull llama3.2`
+3. Start Ollama: `ollama serve`
+4. Select "Ollama - Local AI" in settings
+
+**Recommended Models:**
+- `llama3.2` - General purpose, great balance
+- `codellama` - Optimized for code
+- `mistral` - Fast and lightweight
+- `mixtral` - High accuracy
+
+---
+
+## 🛠️ Development
+
+### Project Structure
+
+```
+velar/
+├── electron/              # Electron main process
+│   ├── main.ts           # Application entry point
+│   ├── preload.ts        # Secure IPC bridge
+│   ├── ipcHandlers.ts    # IPC message handlers
+│   ├── LLMHelper.ts      # AI service integration
+│   ├── ScreenshotHelper.ts
+│   ├── ProcessingHelper.ts
+│   ├── WindowHelper.ts
+│   └── shortcuts.ts
+│
+├── src/                  # React renderer
+│   ├── _pages/          # Page components
+│   ├── components/      # Reusable components
+│   ├── constants/       # App configuration
+│   ├── utils/           # Utilities & helpers
+│   ├── types/           # TypeScript definitions
+│   └── lib/             # Third-party integrations
+│
+├── assets/              # Static assets
+├── dist/                # Vite build output
+├── dist-electron/       # Electron build
+└── release/             # Distribution packages
+```
+
+### Development Scripts
+
+```bash
+# Start development server
+npm start
+
+# Build renderer only
+npm run build
+
+# Watch Electron TypeScript
+npm run watch
+
+# Create production build
+npm run dist
+
+# Clean build artifacts
+npm run clean
+```
+
+### Tech Stack
+
+- **Frontend**: React 18, TypeScript, TailwindCSS
+- **Build**: Vite, Electron Builder
+- **AI**: Google Generative AI, Ollama
+- **Image Processing**: Sharp
+- **UI Components**: Radix UI, Lucide Icons
+- **Markdown**: React Markdown with remark-gfm
+
+---
 
 ## 🔧 Troubleshooting
 
-### Windows Issues Fixed 
-- **UI not loading**: Port mismatch resolved
-- **Electron crashes**: Improved error handling  
-- **Build failures**: Production config updated
-- **Window focus problems**: Platform-specific fixes applied
+### Common Issues
 
-### Ubuntu/Linux Issues Fixed 
-- **Window interaction**: Fixed focusable settings
-- **Installation confusion**: Clear setup instructions
-- **Missing dependencies**: All requirements documented
+#### Port 5180 Already in Use
+```bash
+# Find process using port 5180
+lsof -i :5180
 
-### Common Solutions
+# Kill the process
+kill -9 <PID>
+```
 
 #### Sharp/Python Build Errors
-If you see `gyp ERR! find Python` or Sharp build errors:
 ```bash
-# Solution 1: Use prebuilt binaries
+# Solution 1: Use prebuilt binaries (recommended)
 rm -rf node_modules package-lock.json
 SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --ignore-scripts
 npm rebuild sharp
 
-# Solution 2: Or install Python (if you prefer building from source)
+# Solution 2: Install Python (if you prefer building from source)
 brew install python3  # macOS
-# Then run: npm install
+# Then: npm install
 ```
 
-#### General Installation Issues
-If you see other errors:
-1. Delete the `node_modules` folder
-2. Delete `package-lock.json` 
-3. Run `npm install` again
-4. Try running with `npm start`
+#### Ollama Connection Failed
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
+
+# Start Ollama
+ollama serve
+
+# Pull a model if not available
+ollama pull llama3.2
+```
+
+#### App Won't Close
+- Press `Cmd/Ctrl + Q` to quit
+- Use Activity Monitor (Mac) or Task Manager (Windows) to force quit
+- Kill process: `pkill -f Velar` or `pkill -f electron`
 
 ### Platform-Specific Notes
-- **Windows**: App now works on Windows 10/11
-- **Ubuntu/Linux**: Tested on Ubuntu 20.04+ and most Linux distros  
-- **macOS**: Native support with proper window management
 
-## Key Features
+**macOS:**
+- Grant Screen Recording permission in Privacy settings
+- Allow app in Security & Privacy if downloaded directly
+- Use `Cmd` key for shortcuts
 
-### **Invisible AI Assistant**
-- Translucent, always-on-top window that's barely noticeable
-- Hide/show instantly with global hotkeys
-- Works seamlessly across all applications
+**Windows:**
+- May need to allow through Windows Defender
+- Use `Ctrl` key for shortcuts
+- Run as administrator if permission issues occur
 
-### **Smart Screenshot Analysis** 
-- Take screenshots of any content with `Cmd/Ctrl + H`
-- AI analyzes images, documents, presentations, or problems
-- Get instant explanations, answers, and solutions
+**Linux:**
+- Install dependencies: `sudo apt-get install libgtk-3-0 libnotify4 libnss3 libxss1`
+- Some distributions may require additional X11 libraries
+- Use `Ctrl` key for shortcuts
 
-### **Audio Intelligence**
-- Process audio files and recordings
-- Real-time transcription and analysis
-- Perfect for meeting notes and content review
+---
 
-### **Contextual Chat**
-- Chat with AI about anything you see on screen
-- Maintains conversation context
-- Ask follow-up questions for deeper insights
+## 📊 System Requirements
 
-### **Privacy-First Design**
-- **Local AI Option**: Use Ollama for 100% private processing
-- **Cloud Option**: Google Gemini for maximum performance
-- Screenshots auto-deleted after processing
-- No data tracking or storage
+### Minimum
+- **OS**: macOS 10.13+, Windows 10+, Ubuntu 20.04+
+- **RAM**: 4GB
+- **CPU**: Dual-core processor
+- **Storage**: 2GB free space
+- **Internet**: For Gemini AI only
 
-### **Cross-Platform Support**
-- **Windows 10/11** - Full support with native performance
-- **Ubuntu/Linux** - Optimized for all major distributions  
-- **macOS** - Native window management and shortcuts
+### Recommended
+- **RAM**: 8GB+ (16GB for Ollama)
+- **CPU**: Quad-core processor
+- **Storage**: 5GB+ free space
+- **GPU**: Integrated graphics or better
 
-## Use Cases
+---
 
-### **Academic & Learning**
-```
-✓ Live presentation support during classes
-✓ Quick research during online exams  
-✓ Language translation and explanations
-✓ Math and science problem solving
-```
+## 🎨 Use Cases
 
-### **Professional Meetings**
-```
-✓ Sales call preparation and objection handling
-✓ Technical interview coaching
-✓ Client presentation support
-✓ Real-time fact-checking and data lookup
-```
+### 🎓 Academic & Learning
+- Real-time support during online classes
+- Homework and assignment help
+- Language translation and learning
+- Math and science problem solving
 
-### **Development & Tech**
-```
-✓ Debug error messages instantly
-✓ Code explanation and optimization
-✓ Documentation and API references
-✓ Algorithm and architecture guidance
-```
+### 💼 Professional Meetings
+- Sales call preparation and objection handling
+- Technical interview coaching
+- Client presentation support
+- Real-time fact-checking and data lookup
 
-## Why Choose Free Cluely?
+### 👨‍💻 Development & Tech
+- Debug error messages instantly
+- Code explanation and optimization
+- Documentation and API reference lookup
+- Algorithm and architecture guidance
 
-| Feature | Free Cluely | Commercial Alternatives |
-|---------|-------------|------------------------|
-| **Cost** | 100% Free | $29-99/month |
-| **Privacy** | Local AI Option | Cloud-only |
-| **Open Source** | Full transparency | Closed source |
-| **Customization** | Fully customizable | Limited options |
-| **Data Control** | You own your data | Third-party servers |
-| **Offline Mode** | Yes (with Ollama) | No |
+### 📝 Content Creation
+- Research assistance while writing
+- Fact-checking and verification
+- Competitor analysis
+- Content ideation and brainstorming
 
-## Technical Details
+---
 
-### **AI Models Supported**
-- **Gemini 2.0 Flash** - Latest Google AI with vision capabilities
-- **Llama 3.2** - Meta's advanced local model via Ollama
-- **CodeLlama** - Specialized coding assistance
-- **Mistral** - Lightweight, fast responses
-- **Custom Models** - Any Ollama-compatible model
+## 🔐 Privacy & Security
 
-### **System Requirements**
-```bash
-Minimum:  4GB RAM, Dual-core CPU, 2GB storage
-Recommended: 8GB+ RAM, Quad-core CPU, 5GB+ storage
-Optimal: 16GB+ RAM for local AI models
-```
+### Data Handling
+- **Screenshots**: Deleted immediately after processing
+- **Chat History**: Stored locally, never uploaded
+- **API Keys**: Encrypted in local storage
+- **Telemetry**: Disabled by default
+
+### Privacy Mode
+- Prevents other apps from detecting screen captures
+- Blocks OS-level screenshot notifications
+- UI remains visible to you
+- Toggle with `Cmd/Ctrl + I`
+
+### Local AI Benefits
+- All processing stays on your machine
+- No data ever sent to external servers
+- Works offline
+- Full control over your data
+
+---
 
 ## 🤝 Contributing
 
-This project welcomes contributions! While I have limited time for active maintenance, I'll review and merge quality PRs.
+Contributions are welcome! This is an open-source project maintained by the community.
 
-**Ways to contribute:**
-- 🐛 Bug fixes and stability improvements
-- ✨ New features and AI model integrations  
-- 📚 Documentation and tutorial improvements
-- 🌍 Translations and internationalization
-- 🎨 UI/UX enhancements
+### Ways to Contribute
 
-For commercial integrations or custom development, reach out on [Twitter](https://x.com/prathitjoshi_)
+- �� **Bug Reports**: Open an issue with details
+- ✨ **Feature Requests**: Suggest new capabilities
+- �� **Bug Fixes**: Submit PRs for fixes
+- 📚 **Documentation**: Improve docs and guides
+- 🌍 **Translations**: Add language support
+- 🎨 **UI/UX**: Enhance interface and experience
+
+### Development Setup
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Make changes and test thoroughly
+4. Commit: `git commit -m 'Add amazing feature'`
+5. Push: `git push origin feature/amazing-feature`
+6. Open Pull Request
+
+### Code Guidelines
+
+- Follow existing code style
+- Add tests for new features
+- Update documentation
+- Keep PRs focused and small
+- Write clear commit messages
+
+---
 
 ## 📄 License
 
 ISC License - Free for personal and commercial use.
 
+```
+Copyright (c) 2025 Velar Team
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+```
+
 ---
 
-**⭐ Star this repo if Free Cluely helps you succeed in meetings, interviews, or presentations!**
+## 🌟 Support
 
-### 🏷️ Tags
-`ai-assistant` `meeting-notes` `interview-helper` `presentation-support` `ollama` `gemini-ai` `electron-app` `cross-platform` `privacy-focused` `open-source` `local-ai` `screenshot-analysis` `academic-helper` `sales-assistant` `coding-companion`
+### Documentation
+- [Architecture Guide](./ARCHITECTURE.md)
+- [Development Guide](./DEVELOPMENT.md)
+- [Production Setup](./PRODUCTION_READY.md)
+
+### Community
+- **Issues**: [GitHub Issues](https://github.com/Saijayaranjan/Velar/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Saijayaranjan/Velar/discussions)
+- **Twitter**: [@prathitjoshi_](https://twitter.com/prathitjoshi_)
+
+### Commercial Support
+For enterprise deployments or custom development, reach out via Twitter or GitHub.
+
+---
+
+## 🎯 Roadmap
+
+### Version 1.1
+- [ ] Plugin system for extensibility
+- [ ] Multi-language support
+- [ ] Custom AI model training
+- [ ] Team collaboration features
+
+### Version 1.2
+- [ ] Cloud sync (optional)
+- [ ] Mobile companion app
+- [ ] Advanced analytics
+- [ ] Voice commands
+
+### Future
+- [ ] Browser extension
+- [ ] API for third-party integrations
+- [ ] Enterprise features
+- [ ] Advanced automation
+
+---
+
+## 🙏 Acknowledgments
+
+- **Electron** - Desktop app framework
+- **Google Gemini** - AI capabilities
+- **Ollama** - Local AI runtime
+- **Sharp** - Image processing
+- **React** - UI framework
+- **TailwindCSS** - Styling
+- **Community** - Contributors and users
+
+---
+
+## 📈 Stats
+
+![GitHub stars](https://img.shields.io/github/stars/Saijayaranjan/Velar?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Saijayaranjan/Velar?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/Saijayaranjan/Velar?style=social)
+
+---
+
+<div align="center">
+
+**⭐ Star this repository if Velar helps you!**
+
+Made with ❤️ by the Velar Team
+
+[Report Bug](https://github.com/Saijayaranjan/Velar/issues) · [Request Feature](https://github.com/Saijayaranjan/Velar/issues) · [Documentation](./ARCHITECTURE.md)
+
+</div>
+
+---
+
+## 🔍 SEO Keywords
+
+`free cluely alternative` `cluely free` `open source cluely` `cluely alternative github` `free interview assistant` `ai meeting companion` `screenshot analysis tool` `free ai assistant` `local ai assistant` `privacy-focused ai` `ollama assistant` `gemini assistant` `interview coaching tool` `meeting notes ai` `code debugging assistant` `free coding helper` `student interview tool` `technical interview assistant` `sales call helper` `presentation assistant` `velar ai` `electron ai app` `cross-platform ai assistant` `offline ai assistant` `no subscription ai tool` `free meeting recorder` `ai transcription tool` `screenshot to text` `visual ai assistant` `developer assistant` `coding interview prep`

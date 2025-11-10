@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { Cloud, Home, RefreshCw, Loader2, BarChart3, Info, Key, CheckCircle2, XCircle, Settings } from 'lucide-react';
 
 interface ModelConfig {
   provider: "ollama" | "gemini";
   model: string;
   isOllama: boolean;
+}
+
+interface GeminiModel {
+  id: string;
+  name: string;
+  description: string;
+  supportedGenerationMethods?: string[];
 }
 
 interface ModelSelectorProps {
@@ -14,16 +22,21 @@ interface ModelSelectorProps {
 const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen }) => {
   const [currentConfig, setCurrentConfig] = useState<ModelConfig | null>(null);
   const [availableOllamaModels, setAvailableOllamaModels] = useState<string[]>([]);
+  const [availableGeminiModels, setAvailableGeminiModels] = useState<GeminiModel[]>([]);
+  const [isLoadingGeminiModels, setIsLoadingGeminiModels] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'testing' | 'success' | 'error' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [fetchSuccess, setFetchSuccess] = useState<string>('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<"ollama" | "gemini">("gemini");
   const [selectedOllamaModel, setSelectedOllamaModel] = useState<string>("");
+  const [selectedGeminiModel, setSelectedGeminiModel] = useState<string>("gemini-2.0-flash-exp");
   const [ollamaUrl, setOllamaUrl] = useState<string>("http://localhost:11434");
 
   useEffect(() => {
     loadCurrentConfig();
+    loadGeminiModels();
   }, []);
 
   const loadCurrentConfig = async () => {
@@ -36,11 +49,46 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
       if (config.isOllama) {
         setSelectedOllamaModel(config.model);
         await loadOllamaModels();
+      } else {
+        setSelectedGeminiModel(config.model);
       }
     } catch (error) {
       console.error('Error loading current config:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const loadGeminiModels = async () => {
+    try {
+      // First load the static list
+      const staticModels = await window.electronAPI.getAvailableGeminiModels();
+      setAvailableGeminiModels(staticModels);
+    } catch (error) {
+      console.error('Error loading Gemini models:', error);
+    }
+  };
+  
+  const fetchGeminiModelsFromAPI = async () => {
+    try {
+      setIsLoadingGeminiModels(true);
+      setErrorMessage('');
+      setFetchSuccess('');
+      
+      const apiModels = await window.electronAPI.fetchAvailableGeminiModels();
+      setAvailableGeminiModels(apiModels);
+      setFetchSuccess(`Successfully fetched ${apiModels.length} models from Google API!`);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setFetchSuccess(''), 3000);
+      
+      console.log(`Fetched ${apiModels.length} models from Google API`);
+    } catch (error) {
+      console.error('Error fetching Gemini models from API:', error);
+      setErrorMessage('Failed to fetch models from API. Using cached list.');
+      setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      setIsLoadingGeminiModels(false);
     }
   };
 
@@ -81,13 +129,13 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
       if (selectedProvider === 'ollama') {
         result = await window.electronAPI.switchToOllama(selectedOllamaModel, ollamaUrl);
       } else {
-        result = await window.electronAPI.switchToGemini(geminiApiKey || undefined);
+        result = await window.electronAPI.switchToGemini(geminiApiKey || undefined, selectedGeminiModel);
       }
 
       if (result.success) {
         await loadCurrentConfig();
         setConnectionStatus('success');
-        onModelChange?.(selectedProvider, selectedProvider === 'ollama' ? selectedOllamaModel : 'gemini-2.0-flash');
+        onModelChange?.(selectedProvider, selectedProvider === 'ollama' ? selectedOllamaModel : selectedGeminiModel);
         // Auto-open chat window after successful model change
         setTimeout(() => {
           onChatOpen?.();
@@ -104,18 +152,18 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
 
   const getStatusColor = () => {
     switch (connectionStatus) {
-      case 'testing': return 'text-yellow-600';
-      case 'success': return 'text-green-600';
-      case 'error': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'testing': return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30';
+      case 'success': return 'bg-green-500/20 text-green-400 border border-green-500/30';
+      case 'error': return 'bg-red-500/20 text-red-400 border border-red-500/30';
+      default: return 'bg-cluely-dark-card/40 text-cluely-text-muted border border-white/10';
     }
   };
 
   const getStatusText = () => {
     switch (connectionStatus) {
-      case 'testing': return 'Testing connection...';
-      case 'success': return 'Connected successfully';
-      case 'error': return `Error: ${errorMessage}`;
+      case 'testing': return 'Testing...';
+      case 'success': return 'Connected';
+      case 'error': return 'Error';
       default: return 'Ready';
     }
   };
@@ -129,99 +177,203 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
   }
 
   return (
-    <div className="p-4 bg-white/20 backdrop-blur-md rounded-lg border border-white/30 space-y-4">
+    <div className="modern-settings-container rounded-xl space-y-2.5 text-cluely-text-primary">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-800">AI Model Selection</h3>
-        <div className={`text-xs ${getStatusColor()}`}>
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-cluely-accent-teal/20 to-cluely-accent-cyan/10 border border-cluely-accent-teal/30">
+            <Settings size={15} className="text-cluely-accent-teal" />
+          </div>
+          <h3 className="text-sm font-semibold text-cluely-text-primary">Settings</h3>
+        </div>
+        <div className={`text-[10px] px-2 py-0.5 rounded-full ${getStatusColor()}`}>
           {getStatusText()}
         </div>
       </div>
 
       {/* Current Status */}
       {currentConfig && (
-        <div className="text-xs text-gray-600 bg-white/40 p-2 rounded">
-          Current: {currentConfig.provider === 'ollama' ? '🏠' : '☁️'} {currentConfig.model}
+        <div className="settings-status-card">
+          <div className="flex items-center gap-2">
+            <div className={`p-1.5 rounded-lg ${currentConfig.provider === 'ollama' ? 'bg-green-500/10' : 'bg-cluely-accent-teal/10'}`}>
+              {currentConfig.provider === 'ollama' ? 
+                <Home size={12} className="text-green-400" /> : 
+                <Cloud size={12} className="text-cluely-accent-teal" />
+              }
+            </div>
+            <div>
+              <p className="text-[9px] text-cluely-text-muted">Currently Active</p>
+              <p className="text-xs font-medium text-cluely-text-primary">{currentConfig.model}</p>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Provider Selection */}
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-gray-700">Provider</label>
-        <div className="flex gap-2">
+      <div className="space-y-1.5">
+        <label className="text-[10px] font-medium text-cluely-text-muted uppercase tracking-wide">Select Provider</label>
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setSelectedProvider('gemini')}
-            className={`flex-1 px-3 py-2 rounded text-xs transition-all ${
-              selectedProvider === 'gemini'
-                ? 'bg-blue-500 text-white shadow-md'
-                : 'bg-white/40 text-gray-700 hover:bg-white/60'
+            className={`modern-provider-button ${
+              selectedProvider === 'gemini' ? 'provider-active-teal' : ''
             }`}
           >
-            ☁️ Gemini (Cloud)
+            <Cloud size={14} />
+            <div className="text-left">
+              <div className="text-[10px] font-medium">Gemini - Cloud AI</div>
+            </div>
           </button>
           <button
             onClick={() => setSelectedProvider('ollama')}
-            className={`flex-1 px-3 py-2 rounded text-xs transition-all ${
-              selectedProvider === 'ollama'
-                ? 'bg-green-500 text-white shadow-md'
-                : 'bg-white/40 text-gray-700 hover:bg-white/60'
+            className={`modern-provider-button ${
+              selectedProvider === 'ollama' ? 'provider-active-green' : ''
             }`}
           >
-            🏠 Ollama (Local)
+            <Home size={14} />
+            <div className="text-left">
+              <div className="text-[10px] font-medium">Ollama - Local AI</div>
+            </div>
           </button>
         </div>
       </div>
 
       {/* Provider-specific settings */}
       {selectedProvider === 'gemini' ? (
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-700">Gemini API Key (optional if already set)</label>
-          <input
-            type="password"
-            placeholder="Enter API key to update..."
-            value={geminiApiKey}
-            onChange={(e) => setGeminiApiKey(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-white/40 border border-white/60 rounded focus:outline-none focus:ring-2 focus:ring-blue-400/60"
-          />
-        </div>
-      ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5 settings-provider-section">
           <div>
-            <label className="text-xs font-medium text-gray-700">Ollama URL</label>
+            <label className="settings-label">
+              <Key size={10} className="text-cluely-accent-teal" />
+              <span>Gemini API Key</span>
+              <span className="text-[9px] opacity-60">(optional if already set)</span>
+            </label>
             <input
-              type="url"
-              value={ollamaUrl}
-              onChange={(e) => setOllamaUrl(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white/40 border border-white/60 rounded focus:outline-none focus:ring-2 focus:ring-green-400/60"
+              type="password"
+              placeholder="sk-..."
+              value={geminiApiKey}
+              onChange={(e) => setGeminiApiKey(e.target.value)}
+              className="modern-input"
             />
           </div>
           
           <div>
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-gray-700">Model</label>
-              <button
-                onClick={loadOllamaModels}
-                className="px-2 py-1 text-xs bg-white/60 hover:bg-white/80 rounded transition-all"
-                title="Refresh models"
-              >
-                🔄
-              </button>
-            </div>
+            <label className="settings-label mb-1.5">
+              <BarChart3 size={10} className="text-cluely-accent-teal" />
+              <span>Model Selection</span>
+            </label>
             
-            {availableOllamaModels.length > 0 ? (
+            {/* Status messages */}
+            {fetchSuccess && (
+              <div className="status-message success">
+                <CheckCircle2 size={11} />
+                <span>{fetchSuccess}</span>
+              </div>
+            )}
+            
+            {errorMessage && !fetchSuccess && (
+              <div className="status-message error">
+                <XCircle size={11} />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+            
+            <div className="flex gap-2">
               <select
-                value={selectedOllamaModel}
-                onChange={(e) => setSelectedOllamaModel(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white/40 border border-white/60 rounded focus:outline-none focus:ring-2 focus:ring-green-400/60"
+                value={selectedGeminiModel}
+                onChange={(e) => setSelectedGeminiModel(e.target.value)}
+                className="modern-select flex-1"
               >
-                {availableOllamaModels.map((model) => (
-                  <option key={model} value={model}>
-                    {model}
+                {availableGeminiModels.map((model) => (
+                  <option key={model.id} value={model.id} className="bg-cluely-dark-bg">
+                    {model.name}
                   </option>
                 ))}
               </select>
+              <button
+                onClick={fetchGeminiModelsFromAPI}
+                disabled={isLoadingGeminiModels}
+                className="modern-refresh-button"
+                title="Fetch latest models from API"
+              >
+                {isLoadingGeminiModels ? (
+                  <Loader2 size={10} className="animate-spin" />
+                ) : (
+                  <RefreshCw size={10} />
+                )}
+              </button>
+            </div>
+            
+            {/* Model info card */}
+            {availableGeminiModels.find(m => m.id === selectedGeminiModel) && (
+              <div className="model-info-card">
+                <div className="flex items-start gap-2">
+                  <Info size={11} className="text-cluely-accent-teal mt-0.5 flex-shrink-0" />
+                  <div className="space-y-1 flex-1">
+                    <p className="text-[10px] text-cluely-text-primary font-medium">
+                      {selectedGeminiModel}
+                    </p>
+                    {availableGeminiModels.find(m => m.id === selectedGeminiModel)?.description && (
+                      <p className="text-[9px] text-cluely-text-muted leading-relaxed">
+                        {availableGeminiModels.find(m => m.id === selectedGeminiModel)?.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-1 text-[9px] text-cluely-accent-teal pt-0.5">
+                      <BarChart3 size={9} />
+                      <span>{availableGeminiModels.length} models available</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2.5 settings-provider-section">
+          <div>
+            <label className="settings-label">
+              <Home size={10} className="text-green-400" />
+              <span>Ollama Server URL</span>
+            </label>
+            <input
+              type="url"
+              value={ollamaUrl}
+              onChange={(e) => setOllamaUrl(e.target.value)}
+              className="modern-input"
+              placeholder="http://localhost:11434"
+            />
+          </div>
+          
+          <div>
+            <label className="settings-label mb-1.5">
+              <BarChart3 size={10} className="text-green-400" />
+              <span>Model Selection</span>
+            </label>
+            
+            {availableOllamaModels.length > 0 ? (
+              <div className="flex gap-2">
+                <select
+                  value={selectedOllamaModel}
+                  onChange={(e) => setSelectedOllamaModel(e.target.value)}
+                  className="modern-select flex-1"
+                >
+                  {availableOllamaModels.map((model) => (
+                    <option key={model} value={model} className="bg-cluely-dark-bg">
+                      {model}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={loadOllamaModels}
+                  className="modern-refresh-button green"
+                  title="Refresh available models"
+                >
+                  <RefreshCw size={10} />
+                </button>
+              </div>
             ) : (
-              <div className="text-xs text-gray-600 bg-yellow-100/60 p-2 rounded">
-                No Ollama models found. Make sure Ollama is running and models are installed.
+              <div className="status-message warning">
+                <Info size={11} />
+                <span>No models found. Ensure Ollama is running and models are installed.</span>
               </div>
             )}
           </div>
@@ -229,28 +381,55 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
       )}
 
       {/* Action buttons */}
-      <div className="flex gap-2 pt-2">
+      <div className="flex gap-2 pt-1.5">
         <button
           onClick={handleProviderSwitch}
           disabled={connectionStatus === 'testing'}
-          className="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-xs rounded transition-all shadow-md"
+          className="modern-action-button primary"
         >
-          {connectionStatus === 'testing' ? 'Switching...' : 'Apply Changes'}
+          {connectionStatus === 'testing' ? (
+            <>
+              <Loader2 size={12} className="animate-spin" />
+              <span>Applying...</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 size={12} />
+              <span>Apply Changes</span>
+            </>
+          )}
         </button>
         
         <button
           onClick={testConnection}
           disabled={connectionStatus === 'testing'}
-          className="px-3 py-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white text-xs rounded transition-all shadow-md"
+          className="modern-action-button secondary"
         >
-          Test
+          <RefreshCw size={12} />
+          <span>Test Connection</span>
         </button>
       </div>
 
-      {/* Help text */}
-      <div className="text-xs text-gray-600 space-y-1">
-        <div>💡 <strong>Gemini:</strong> Fast, cloud-based, requires API key</div>
-        <div>💡 <strong>Ollama:</strong> Private, local, requires Ollama installation</div>
+      {/* Help section */}
+      <div className="settings-help-section">
+        <div className="help-item">
+          <Cloud size={10} className="text-cluely-accent-teal flex-shrink-0" />
+          <div>
+            <span className="font-medium">Gemini</span>
+            <span className="opacity-70"> - Google's cloud AI with API authentication</span>
+          </div>
+        </div>
+        <div className="help-item">
+          <Home size={10} className="text-green-400 flex-shrink-0" />
+          <div>
+            <span className="font-medium">Ollama</span>
+            <span className="opacity-70"> - Run AI models locally on your machine</span>
+          </div>
+        </div>
+        <div className="help-item tip">
+          <Key size={10} className="text-cluely-accent-cyan flex-shrink-0" />
+          <span>Use "Refresh Models" to fetch the latest available models for your provider</span>
+        </div>
       </div>
     </div>
   );

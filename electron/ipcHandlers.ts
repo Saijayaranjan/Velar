@@ -1,6 +1,6 @@
 // ipcHandlers.ts
 
-import { ipcMain, app } from "electron"
+import { ipcMain, app, shell } from "electron"
 import { AppState } from "./main"
 
 export function initializeIpcHandlers(appState: AppState): void {
@@ -103,9 +103,9 @@ export function initializeIpcHandlers(appState: AppState): void {
     }
   })
 
-  ipcMain.handle("gemini-chat", async (event, message: string) => {
+  ipcMain.handle("gemini-chat", async (event, message: string, screenshots: string[]) => {
     try {
-      const result = await appState.processingHelper.getLLMHelper().chatWithGemini(message);
+      const result = await appState.processingHelper.getLLMHelper().chatWithGemini(message, screenshots);
       return result;
     } catch (error: any) {
       console.error("Error in gemini-chat handler:", error);
@@ -115,6 +115,18 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   ipcMain.handle("quit-app", () => {
     app.quit()
+  })
+
+  // Open System Settings for Screen Recording permission
+  ipcMain.handle("open-screen-recording-settings", async () => {
+    try {
+      // macOS command to open Screen Recording settings
+      if (process.platform === "darwin") {
+        await shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+      }
+    } catch (error) {
+      console.error("Error opening Screen Recording settings:", error)
+    }
   })
 
   // Window movement handlers
@@ -136,6 +148,12 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   ipcMain.handle("center-and-show-window", async () => {
     appState.centerAndShowWindow()
+  })
+
+  // Invisibility Mode Handler (Pro+ Feature)
+  ipcMain.handle("toggle-invisibility-mode", async () => {
+    appState.toggleInvisibilityMode()
+    return { success: true, isInvisible: appState.getInvisibilityMode() }
   })
 
   // LLM Model Management Handlers
@@ -163,6 +181,28 @@ export function initializeIpcHandlers(appState: AppState): void {
       throw error;
     }
   });
+  
+  ipcMain.handle("get-available-gemini-models", async () => {
+    try {
+      const llmHelper = appState.processingHelper.getLLMHelper();
+      const models = llmHelper.getAvailableGeminiModels();
+      return models;
+    } catch (error: any) {
+      console.error("Error getting Gemini models:", error);
+      throw error;
+    }
+  });
+  
+  ipcMain.handle("fetch-available-gemini-models", async () => {
+    try {
+      const llmHelper = appState.processingHelper.getLLMHelper();
+      const models = await llmHelper.fetchAvailableGeminiModels();
+      return models;
+    } catch (error: any) {
+      console.error("Error fetching Gemini models from API:", error);
+      throw error;
+    }
+  });
 
   ipcMain.handle("switch-to-ollama", async (_, model?: string, url?: string) => {
     try {
@@ -175,13 +215,24 @@ export function initializeIpcHandlers(appState: AppState): void {
     }
   });
 
-  ipcMain.handle("switch-to-gemini", async (_, apiKey?: string) => {
+  ipcMain.handle("switch-to-gemini", async (_, apiKey?: string, model?: string) => {
     try {
       const llmHelper = appState.processingHelper.getLLMHelper();
-      await llmHelper.switchToGemini(apiKey);
+      await llmHelper.switchToGemini(apiKey, model);
       return { success: true };
     } catch (error: any) {
       console.error("Error switching to Gemini:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
+  ipcMain.handle("switch-gemini-model", async (_, model: string) => {
+    try {
+      const llmHelper = appState.processingHelper.getLLMHelper();
+      await llmHelper.switchGeminiModel(model);
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error switching Gemini model:", error);
       return { success: false, error: error.message };
     }
   });

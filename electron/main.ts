@@ -182,6 +182,14 @@ export class AppState {
     this.windowHelper.centerAndShowWindow()
   }
 
+  public toggleInvisibilityMode(): void {
+    this.windowHelper.toggleInvisibilityMode()
+  }
+
+  public getInvisibilityMode(): boolean {
+    return this.windowHelper.getInvisibilityMode()
+  }
+
   public createTray(): void {
     // Create a simple tray icon
     const image = nativeImage.createEmpty()
@@ -200,7 +208,7 @@ export class AppState {
     
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: 'Show Interview Coder',
+        label: 'Show Velar',
         click: () => {
           this.centerAndShowWindow()
         }
@@ -244,7 +252,7 @@ export class AppState {
       }
     ])
     
-    this.tray.setToolTip('Interview Coder - Press Cmd+Shift+Space to show')
+    this.tray.setToolTip('Velar - Press Cmd+Shift+Space to show')
     this.tray.setContextMenu(contextMenu)
     
     // Set a title for macOS (will appear in menu bar)

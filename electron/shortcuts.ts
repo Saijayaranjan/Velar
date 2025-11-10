@@ -28,6 +28,10 @@ export class ShortcutsHelper {
           })
         } catch (error) {
           console.error("Error capturing screenshot:", error)
+          
+          // Send error to renderer process instead of showing dialog
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          mainWindow.webContents.send("screenshot-error", errorMessage)
         }
       }
     })
@@ -94,6 +98,12 @@ export class ShortcutsHelper {
           }, 100)
         }
       }
+    })
+
+    // Invisibility Mode Toggle (Cluely Pro+ Feature)
+    globalShortcut.register("CommandOrControl+I", () => {
+      console.log("Command/Ctrl + I pressed. Toggling invisibility mode.")
+      this.appState.toggleInvisibilityMode()
     })
 
     // Unregister shortcuts when quitting

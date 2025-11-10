@@ -52,8 +52,11 @@ declare global {
       // LLM Model Management
       getCurrentLlmConfig: () => Promise<{ provider: "ollama" | "gemini"; model: string; isOllama: boolean }>
       getAvailableOllamaModels: () => Promise<string[]>
+      getAvailableGeminiModels: () => Promise<Array<{ id: string; name: string; description: string }>>
+      fetchAvailableGeminiModels: () => Promise<Array<{ id: string; name: string; description: string; supportedGenerationMethods: string[] }>>
       switchToOllama: (model?: string, url?: string) => Promise<{ success: boolean; error?: string }>
-      switchToGemini: (apiKey?: string) => Promise<{ success: boolean; error?: string }>
+      switchToGemini: (apiKey?: string, model?: string) => Promise<{ success: boolean; error?: string }>
+      switchGeminiModel: (model: string) => Promise<{ success: boolean; error?: string }>
       testLlmConnection: () => Promise<{ success: boolean; error?: string }>
       
       invoke: (channel: string, ...args: any[]) => Promise<any>

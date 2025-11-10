@@ -121,7 +121,17 @@ export class ScreenshotHelper {
       return screenshotPath
     } catch (error) {
       console.error("Error taking screenshot:", error)
-      throw new Error(`Failed to take screenshot: ${error.message}`)
+      const errorMessage = error.message || String(error)
+      
+      // Check if it's a permission error
+      if (errorMessage.includes("could not create image from display") || 
+          errorMessage.includes("screencapture")) {
+        throw new Error(
+          "Screen Recording permission denied. Please enable Screen Recording for this app in System Settings > Privacy & Security > Screen Recording"
+        )
+      }
+      
+      throw new Error(`Failed to take screenshot: ${errorMessage}`)
     } finally {
       // Ensure window is always shown again
       showMainWindow()

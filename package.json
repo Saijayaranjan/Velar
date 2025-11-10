@@ -1,11 +1,11 @@
 {
-  "name": "interview-coder",
+  "name": "velar",
   "version": "1.0.0",
   "main": "./dist-electron/main.js",
   "scripts": {
     "clean": "rimraf dist dist-electron",
     "dev": "vite",
-    "build": "npm run clean && tsc && vite build",
+    "build": "npm run clean && npx tsc -p electron/tsconfig.json && vite build",
     "preview": "vite preview",
     "postinstall": "cross-env SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm rebuild sharp",
     "electron:dev": "tsc -p electron/tsconfig.json && cross-env NODE_ENV=development electron .",
@@ -17,8 +17,8 @@
     "dist": "npm run app:build"
   },
   "build": {
-    "appId": "com.electron.meeting-notes",
-    "productName": "Meeting Notes Coder",
+    "appId": "com.electron.velar",
+    "productName": "Velar",
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
@@ -45,18 +45,14 @@
             "arm64"
           ]
         }
-      ],
-      "icon": "assets/icons/mac/icon.icns",
-      "hardenedRuntime": true,
-      "entitlements": "assets/entitlements.mac.plist"
+      ]
     },
     "win": {
       "target": [
         {
           "target": "nsis",
           "arch": [
-            "x64",
-            "ia32"
+            "x64"
           ]
         },
         {
@@ -66,7 +62,6 @@
           ]
         }
       ],
-      "icon": "assets/icons/win/icon.ico",
       "requestedExecutionLevel": "asInvoker"
     },
     "linux": {
@@ -96,18 +91,19 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "ibttf",
-        "repo": "interview-coder-frontend"
+        "owner": "Saijayaranjan",
+        "repo": "Velar"
       }
     ]
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": ["ai-assistant", "screenshot-analysis", "electron-app", "ai-powered", "cluely-alternative", "free-cluely", "interview-assistant", "meeting-companion"],
+  "author": "Velar Team",
+  "license": "CC-BY-NC-4.0",
+  "description": "Velar - Free Cluely Alternative. AI-Powered Screenshot Analysis & Debugging Assistant",
   "devDependencies": {
     "@types/color": "^4.2.0",
     "@types/diff": "^6.0.0",
+    "@types/dotenv": "^8.2.3",
     "@types/electron": "^1.4.38",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
@@ -121,6 +117,7 @@
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
+    "dotenv": "^17.2.3",
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
     "electron-is-dev": "^3.0.1",
@@ -148,8 +145,10 @@
     "react-code-blocks": "^0.1.6",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
+    "react-markdown": "^10.1.0",
     "react-query": "^3.39.3",
     "react-syntax-highlighter": "^15.6.1",
+    "remark-gfm": "^4.0.1",
     "screenshot-desktop": "^1.15.0",
     "sharp": "^0.33.5",
     "tailwind-merge": "^2.5.4",

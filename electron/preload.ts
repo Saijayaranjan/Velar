@@ -13,6 +13,7 @@ interface ElectronAPI {
   onScreenshotTaken: (
     callback: (data: { path: string; preview: string }) => void
   ) => () => void
+  onScreenshotError: (callback: (error: string) => void) => () => void
   onSolutionsReady: (callback: (solutions: string) => void) => () => void
   onResetView: (callback: () => void) => () => void
   onSolutionStart: (callback: () => void) => () => void
@@ -34,12 +35,16 @@ interface ElectronAPI {
   analyzeAudioFile: (path: string) => Promise<{ text: string; timestamp: number }>
   analyzeImageFile: (path: string) => Promise<void>
   quitApp: () => Promise<void>
+  onInvisibilityModeChanged: (callback: (isInvisible: boolean) => void) => () => void
   
   // LLM Model Management
   getCurrentLlmConfig: () => Promise<{ provider: "ollama" | "gemini"; model: string; isOllama: boolean }>
   getAvailableOllamaModels: () => Promise<string[]>
+  getAvailableGeminiModels: () => Promise<Array<{ id: string; name: string; description: string }>>
+  fetchAvailableGeminiModels: () => Promise<Array<{ id: string; name: string; description: string; supportedGenerationMethods: string[] }>>
   switchToOllama: (model?: string, url?: string) => Promise<{ success: boolean; error?: string }>
-  switchToGemini: (apiKey?: string) => Promise<{ success: boolean; error?: string }>
+  switchToGemini: (apiKey?: string, model?: string) => Promise<{ success: boolean; error?: string }>
+  switchGeminiModel: (model: string) => Promise<{ success: boolean; error?: string }>
   testLlmConnection: () => Promise<{ success: boolean; error?: string }>
   
   invoke: (channel: string, ...args: any[]) => Promise<any>
@@ -80,6 +85,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.on("screenshot-taken", subscription)
     return () => {
       ipcRenderer.removeListener("screenshot-taken", subscription)
+    }
+  },
+  onScreenshotError: (callback: (error: string) => void) => {
+    const subscription = (_: any, error: string) => callback(error)
+    ipcRenderer.on("screenshot-error", subscription)
+    return () => {
+      ipcRenderer.removeListener("screenshot-error", subscription)
     }
   },
   onSolutionsReady: (callback: (solutions: string) => void) => {
@@ -180,11 +192,22 @@ contextBridge.exposeInMainWorld("electronAPI", {
   analyzeImageFile: (path: string) => ipcRenderer.invoke("analyze-image-file", path),
   quitApp: () => ipcRenderer.invoke("quit-app"),
   
+  onInvisibilityModeChanged: (callback: (isInvisible: boolean) => void) => {
+    const subscription = (_: any, isInvisible: boolean) => callback(isInvisible)
+    ipcRenderer.on("invisibility-mode-changed", subscription)
+    return () => {
+      ipcRenderer.removeListener("invisibility-mode-changed", subscription)
+    }
+  },
+  
   // LLM Model Management
   getCurrentLlmConfig: () => ipcRenderer.invoke("get-current-llm-config"),
   getAvailableOllamaModels: () => ipcRenderer.invoke("get-available-ollama-models"),
+  getAvailableGeminiModels: () => ipcRenderer.invoke("get-available-gemini-models"),
+  fetchAvailableGeminiModels: () => ipcRenderer.invoke("fetch-available-gemini-models"),
   switchToOllama: (model?: string, url?: string) => ipcRenderer.invoke("switch-to-ollama", model, url),
-  switchToGemini: (apiKey?: string) => ipcRenderer.invoke("switch-to-gemini", apiKey),
+  switchToGemini: (apiKey?: string, model?: string) => ipcRenderer.invoke("switch-to-gemini", apiKey, model),
+  switchGeminiModel: (model: string) => ipcRenderer.invoke("switch-gemini-model", model),
   testLlmConnection: () => ipcRenderer.invoke("test-llm-connection"),
   
   invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args)

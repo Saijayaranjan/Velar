@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from "react"
 import { useQuery, useQueryClient } from "react-query"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 import ScreenshotQueue from "../components/Queue/ScreenshotQueue"
 import {
@@ -29,17 +31,17 @@ export const ContentSection = ({
   isLoading: boolean
 }) => (
   <div className="space-y-2">
-    <h2 className="text-[13px] font-medium text-white tracking-wide">
+    <h2 className="text-[12px] font-semibold text-cluely-accent-teal tracking-wide uppercase">
       {title}
     </h2>
     {isLoading ? (
-      <div className="mt-4 flex">
-        <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+      <div className="mt-3 flex">
+        <p className="text-[11px] text-cluely-text-muted animate-pulse">
           Extracting problem statement...
         </p>
       </div>
     ) : (
-      <div className="text-[13px] leading-[1.4] text-gray-100 max-w-[600px]">
+      <div className="text-[12px] leading-[1.6] text-cluely-text-primary max-w-[600px]">
         {content}
       </div>
     )}
@@ -55,34 +57,75 @@ const SolutionSection = ({
   isLoading: boolean
 }) => (
   <div className="space-y-2">
-    <h2 className="text-[13px] font-medium text-white tracking-wide">
+    <h2 className="text-[12px] font-semibold text-cluely-accent-teal tracking-wide uppercase">
       {title}
     </h2>
     {isLoading ? (
       <div className="space-y-1.5">
-        <div className="mt-4 flex">
-          <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+        <div className="mt-3 flex">
+          <p className="text-[11px] text-cluely-text-muted animate-pulse">
             Loading solutions...
           </p>
         </div>
       </div>
     ) : (
       <div className="w-full">
-        <SyntaxHighlighter
-          showLineNumbers
-          language="python"
-          style={dracula}
-          customStyle={{
+        <div
+          className="prose prose-invert max-w-none p-4 rounded-lg"
+          style={{
             maxWidth: "100%",
-            margin: 0,
-            padding: "1rem",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-all"
+            background: "rgba(24, 24, 27, 0.6)",
+            border: "1px solid rgba(255, 255, 255, 0.05)",
+            fontSize: "11px"
           }}
-          wrapLongLines={true}
         >
-          {content as string}
-        </SyntaxHighlighter>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              p: ({ node, ...props }) => (
+                <p className="mb-3 leading-relaxed text-gray-200" {...props} />
+              ),
+              code: ({ node, inline, ...props }) =>
+                inline ? (
+                  <code
+                    className="bg-gray-800 text-pink-400 px-1.5 py-0.5 rounded text-[11px]"
+                    {...props}
+                  />
+                ) : (
+                  <code
+                    className="block bg-gray-800 p-3 rounded overflow-x-auto text-[11px] my-2"
+                    {...props}
+                  />
+                ),
+              strong: ({ node, ...props }) => (
+                <strong className="font-bold text-white" {...props} />
+              ),
+              em: ({ node, ...props }) => (
+                <em className="italic text-gray-300" {...props} />
+              ),
+              ul: ({ node, ...props }) => (
+                <ul className="list-disc list-inside mb-3 text-gray-200 space-y-1" {...props} />
+              ),
+              ol: ({ node, ...props }) => (
+                <ol className="list-decimal list-inside mb-3 text-gray-200 space-y-1" {...props} />
+              ),
+              li: ({ node, ...props }) => (
+                <li className="text-gray-200" {...props} />
+              ),
+              h1: ({ node, ...props }) => (
+                <h1 className="text-lg font-bold mb-3 text-white" {...props} />
+              ),
+              h2: ({ node, ...props }) => (
+                <h2 className="text-base font-bold mb-2 text-white" {...props} />
+              ),
+              h3: ({ node, ...props }) => (
+                <h3 className="text-sm font-bold mb-2 text-white" {...props} />
+              ),
+            }}
+          >
+            {content as string}
+          </ReactMarkdown>
+        </div>
       </div>
     )}
   </div>
@@ -98,25 +141,25 @@ export const ComplexitySection = ({
   isLoading: boolean
 }) => (
   <div className="space-y-2">
-    <h2 className="text-[13px] font-medium text-white tracking-wide">
-      Complexity (Updated)
+    <h2 className="text-[12px] font-semibold text-cluely-accent-teal tracking-wide uppercase">
+      Complexity
     </h2>
     {isLoading ? (
-      <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+      <p className="text-[11px] text-cluely-text-muted animate-pulse">
         Calculating complexity...
       </p>
     ) : (
-      <div className="space-y-1">
-        <div className="flex items-start gap-2 text-[13px] leading-[1.4] text-gray-100">
-          <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
+      <div className="space-y-1.5">
+        <div className="flex items-start gap-2 text-[12px] leading-[1.6] text-cluely-text-primary">
+          <div className="w-1.5 h-1.5 rounded-full bg-cluely-accent-teal mt-1.5 shrink-0" />
           <div>
-            <strong>Time:</strong> {timeComplexity}
+            <strong className="text-cluely-text-primary">Time:</strong> <span className="text-cluely-text-secondary">{timeComplexity}</span>
           </div>
         </div>
-        <div className="flex items-start gap-2 text-[13px] leading-[1.4] text-gray-100">
-          <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
+        <div className="flex items-start gap-2 text-[12px] leading-[1.6] text-cluely-text-primary">
+          <div className="w-1.5 h-1.5 rounded-full bg-cluely-accent-teal mt-1.5 shrink-0" />
           <div>
-            <strong>Space:</strong> {spaceComplexity}
+            <strong className="text-cluely-text-primary">Space:</strong> <span className="text-cluely-text-secondary">{spaceComplexity}</span>
           </div>
         </div>
       </div>
@@ -485,8 +528,8 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
             onTooltipVisibilityChange={handleTooltipVisibilityChange}
           />
 
-          {/* Main Content - Modified width constraints */}
-          <div className="w-full text-sm text-black bg-black/60 rounded-md">
+          {/* Main Content - Modified width constraints with Cluely theme */}
+          <div className="w-full text-sm liquid-glass rounded-lg">
             <div className="rounded-lg overflow-hidden">
               <div className="px-4 py-3 space-y-4 max-w-full">
                 {/* Show Screenshot or Audio Result as main output if validation_type is manual */}
@@ -506,8 +549,12 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
                     />
                     {/* Show loading state when waiting for solution */}
                     {problemStatementData && !solutionData && (
-                      <div className="mt-4 flex">
-                        <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+                      <div className="mt-3 flex items-center gap-2">
+                        <div className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cluely-accent-teal opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-cluely-accent-teal"></span>
+                        </div>
+                        <p className="text-[11px] text-cluely-text-muted animate-pulse">
                           {problemStatementData?.output_format?.subtype === "voice" 
                             ? "Processing voice input..." 
                             : "Generating solutions..."}
@@ -521,15 +568,15 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
                           title="Analysis"
                           content={
                             thoughtsData && (
-                              <div className="space-y-3">
-                                <div className="space-y-1">
+                              <div className="space-y-2">
+                                <div className="space-y-1.5">
                                   {thoughtsData.map((thought, index) => (
                                     <div
                                       key={index}
                                       className="flex items-start gap-2"
                                     >
-                                      <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
-                                      <div>{thought}</div>
+                                      <div className="w-1.5 h-1.5 rounded-full bg-cluely-accent-teal mt-1.5 shrink-0" />
+                                      <div className="text-cluely-text-secondary">{thought}</div>
                                     </div>
                                   ))}
                                 </div>

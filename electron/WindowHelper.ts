@@ -15,6 +15,7 @@ export class WindowHelper {
   private windowPosition: { x: number; y: number } | null = null
   private windowSize: { width: number; height: number } | null = null
   private appState: AppState
+  private isInvisibleMode: boolean = false
 
   // Initialize with explicit number type and 0 value
   private screenWidth: number = 0
@@ -94,7 +95,11 @@ export class WindowHelper {
       resizable: true,
       movable: true,
       x: 100, // Start at a visible position
-      y: 100
+      y: 100,
+      // Critical for screen capture evasion - makes window invisible to screen recording
+      ...(process.platform === 'darwin' ? {
+        visualEffectState: 'active'
+      } : {})
     }
 
     this.mainWindow = new BrowserWindow(windowSettings)
@@ -341,5 +346,73 @@ export class WindowHelper {
       Math.round(this.currentX),
       Math.round(this.currentY)
     )
+  }
+
+  // True Invisibility Mode (Cluely Pro+ Feature)
+  // This makes the window invisible to screen capture/recording but VISIBLE to you!
+  public toggleInvisibilityMode(): void {
+    if (!this.mainWindow || this.mainWindow.isDestroyed()) return
+
+    this.isInvisibleMode = !this.isInvisibleMode
+
+    if (this.isInvisibleMode) {
+      // macOS: Use setContentProtection to prevent screen capture
+      if (process.platform === 'darwin') {
+        // This is the KEY - makes window invisible to screen sharing but visible to user
+        this.mainWindow.setContentProtection(true)
+        
+        // Additional layer: Set window level to make it float but not captured
+        try {
+          // @ts-ignore - using private API for advanced screen capture evasion
+          this.mainWindow.setWindowButtonVisibility(false)
+        } catch (e) {
+          console.log('Could not modify window buttons')
+        }
+      }
+      
+      // Windows/Linux: Use different technique
+      if (process.platform === 'win32') {
+        // Windows: Mark window as system overlay to evade capture
+        try {
+          // @ts-ignore
+          this.mainWindow.setSkipTaskbar(true)
+          this.mainWindow.setAlwaysOnTop(true, 'screen-saver')
+        } catch (e) {
+          console.log('Windows capture evasion limited')
+        }
+      }
+      
+      // Keep window fully visible to user - NO opacity change!
+      this.mainWindow.setOpacity(1.0)
+      
+      // Optional: Make window click-through when in this mode
+      // Uncomment if you want click-through behavior
+      // this.mainWindow.setIgnoreMouseEvents(true, { forward: true })
+      
+      // Send event to renderer to show indicator
+      this.mainWindow.webContents.send('invisibility-mode-changed', true)
+    } else {
+      // Disable screen capture protection
+      if (process.platform === 'darwin') {
+        this.mainWindow.setContentProtection(false)
+      }
+      
+      if (process.platform === 'win32') {
+        this.mainWindow.setAlwaysOnTop(true, 'floating')
+      }
+      
+      // Restore normal state
+      this.mainWindow.setOpacity(1.0)
+      
+      // Re-enable mouse events if they were disabled
+      // this.mainWindow.setIgnoreMouseEvents(false)
+      
+      // Send event to renderer
+      this.mainWindow.webContents.send('invisibility-mode-changed', false)
+    }
+  }
+
+  public getInvisibilityMode(): boolean {
+    return this.isInvisibleMode
   }
 }

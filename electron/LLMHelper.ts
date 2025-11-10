@@ -8,12 +8,24 @@ interface OllamaResponse {
 
 export class LLMHelper {
   private model: GenerativeModel | null = null
+  private genAI: GoogleGenerativeAI | null = null
+  private apiKey: string | null = null
   private readonly systemPrompt = `You are Wingman AI, a helpful, proactive assistant for any kind of problem or situation (not just coding). For any user input, analyze the situation, provide a clear problem statement, relevant context, and suggest several possible responses or actions the user could take next. Always explain your reasoning. Present your suggestions as a list of options or next steps.`
   private useOllama: boolean = false
   private ollamaModel: string = "llama3.2"
   private ollamaUrl: string = "http://localhost:11434"
+  private geminiModel: string = "gemini-2.0-flash" // Stable 2.0 Flash version
+  
+  // Available Gemini models (confirmed working models from API)
+  private readonly availableGeminiModels = [
+    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", description: "Stable version, fastest, multimodal (June 2025)" },
+    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", description: "Most capable stable version (June 2025)" },
+    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "Stable 2.0 Flash version" },
+    { id: "gemini-flash-latest", name: "Gemini Flash Latest", description: "Always uses the latest Flash model" },
+    { id: "gemini-pro-latest", name: "Gemini Pro Latest", description: "Always uses the latest Pro model" },
+  ]
 
-  constructor(apiKey?: string, useOllama: boolean = false, ollamaModel?: string, ollamaUrl?: string) {
+  constructor(apiKey?: string, useOllama: boolean = false, ollamaModel?: string, ollamaUrl?: string, geminiModel?: string) {
     this.useOllama = useOllama
     
     if (useOllama) {
@@ -24,9 +36,11 @@ export class LLMHelper {
       // Auto-detect and use first available model if specified model doesn't exist
       this.initializeOllamaModel()
     } else if (apiKey) {
-      const genAI = new GoogleGenerativeAI(apiKey)
-      this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
-      console.log("[LLMHelper] Using Google Gemini")
+      this.apiKey = apiKey
+      this.genAI = new GoogleGenerativeAI(apiKey)
+      this.geminiModel = geminiModel || "gemini-2.0-flash-exp"
+      this.model = this.genAI.getGenerativeModel({ model: this.geminiModel })
+      console.log(`[LLMHelper] Using Google Gemini model: ${this.geminiModel}`)
     } else {
       throw new Error("Either provide Gemini API key or enable Ollama mode")
     }
@@ -253,14 +267,53 @@ export class LLMHelper {
     }
   }
 
-  public async chatWithGemini(message: string): Promise<string> {
+  public async chatWithGemini(message: string, screenshotPaths?: string[]): Promise<string> {
     try {
+      const chatSystemPrompt = `You're a real-time assistant that gives the user info during meetings and other workflows. Your goal is to answer the user's query directly.
+
+Responses must be EXTREMELY short and terse:
+- Aim for 1-2 sentences, and if longer, use bullet points for structure
+- Get straight to the point and NEVER add filler, preamble, or meta-comments
+- Never give the user a direct script or word track to say, your responses must be informative
+- Don't end with a question or prompt to the user
+- If an example story is needed, give one specific example story without making up details
+- If a response calls for code, write all code required with detailed comments
+
+Tone must be natural, human, and conversational:
+- Never be robotic or overly formal
+- Use contractions naturally ("it's" not "it is")
+- Occasionally start with "And" or "But" or use a sentence fragment for flow
+- NEVER use hyphens or dashes, split into shorter sentences or use commas
+- Avoid unnecessary adjectives or dramatic emphasis unless it adds clear value
+
+User query: ${message}`;
+
       if (this.useOllama) {
-        return this.callOllama(message);
+        return this.callOllama(chatSystemPrompt);
       } else if (this.model) {
-        const result = await this.model.generateContent(message);
-        const response = await result.response;
-        return response.text();
+        // If screenshots are provided, include them in the request
+        if (screenshotPaths && screenshotPaths.length > 0) {
+          const imageParts = await Promise.all(
+            screenshotPaths.map(async (imagePath) => {
+              const imageData = await fs.promises.readFile(imagePath);
+              return {
+                inlineData: {
+                  data: imageData.toString("base64"),
+                  mimeType: "image/png"
+                }
+              };
+            })
+          );
+          
+          const result = await this.model.generateContent([chatSystemPrompt, ...imageParts]);
+          const response = await result.response;
+          return response.text();
+        } else {
+          // No screenshots, just send the message
+          const result = await this.model.generateContent(chatSystemPrompt);
+          const response = await result.response;
+          return response.text();
+        }
       } else {
         throw new Error("No LLM provider configured");
       }
@@ -298,7 +351,69 @@ export class LLMHelper {
   }
 
   public getCurrentModel(): string {
-    return this.useOllama ? this.ollamaModel : "gemini-2.0-flash";
+    return this.useOllama ? this.ollamaModel : this.geminiModel;
+  }
+  
+  public getAvailableGeminiModels(): Array<{ id: string; name: string; description: string }> {
+    return this.availableGeminiModels;
+  }
+  
+  public async fetchAvailableGeminiModels(): Promise<Array<{ id: string; name: string; description: string; supportedGenerationMethods: string[] }>> {
+    if (!this.apiKey) {
+      throw new Error("No API key available. Please set your Gemini API key first.");
+    }
+    
+    try {
+      console.log("[LLMHelper] Fetching available models from Google API...");
+      
+      // Use the Google AI SDK to list available models
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("[LLMHelper] API Error:", response.status, errorText);
+        throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log("[LLMHelper] Received response from API:", data);
+      
+      // Filter and format the models
+      const models = data.models
+        .filter((model: any) => {
+          // Only include generative models (not embedding-only models)
+          return model.supportedGenerationMethods?.includes('generateContent');
+        })
+        .map((model: any) => ({
+          id: model.name.replace('models/', ''), // Remove 'models/' prefix for SDK compatibility
+          name: model.displayName || model.name.replace('models/', ''),
+          description: model.description || 'No description available',
+          supportedGenerationMethods: model.supportedGenerationMethods || [],
+          // Add additional useful info
+          inputTokenLimit: model.inputTokenLimit,
+          outputTokenLimit: model.outputTokenLimit
+        }))
+        .sort((a: any, b: any) => {
+          // Sort by name, putting newer versions first
+          if (a.name.includes('2.5') && !b.name.includes('2.5')) return -1;
+          if (!a.name.includes('2.5') && b.name.includes('2.5')) return 1;
+          if (a.name.includes('2.0') && !b.name.includes('2.0')) return -1;
+          if (!a.name.includes('2.0') && b.name.includes('2.0')) return 1;
+          return a.name.localeCompare(b.name);
+        });
+      
+      console.log(`[LLMHelper] Fetched ${models.length} available Gemini models from API`);
+      console.log("[LLMHelper] Sample models:", models.slice(0, 5).map((m: any) => m.id));
+      return models;
+    } catch (error) {
+      console.error("[LLMHelper] Error fetching Gemini models from API:", error);
+      // Fallback to hardcoded list if API call fails
+      console.log("[LLMHelper] Falling back to hardcoded model list");
+      return this.availableGeminiModels.map(m => ({
+        ...m,
+        supportedGenerationMethods: ['generateContent']
+      }));
+    }
   }
 
   public async switchToOllama(model?: string, url?: string): Promise<void> {
@@ -315,18 +430,45 @@ export class LLMHelper {
     console.log(`[LLMHelper] Switched to Ollama: ${this.ollamaModel} at ${this.ollamaUrl}`);
   }
 
-  public async switchToGemini(apiKey?: string): Promise<void> {
+  public async switchToGemini(apiKey?: string, model?: string): Promise<void> {
     if (apiKey) {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      this.apiKey = apiKey
+      this.genAI = new GoogleGenerativeAI(apiKey);
     }
     
-    if (!this.model && !apiKey) {
-      throw new Error("No Gemini API key provided and no existing model instance");
+    if (!this.genAI && !apiKey) {
+      throw new Error("No Gemini API key provided and no existing API instance");
+    }
+    
+    // Update model if specified
+    if (model) {
+      this.geminiModel = model;
+    }
+    
+    // Create model instance
+    if (this.genAI) {
+      this.model = this.genAI.getGenerativeModel({ model: this.geminiModel });
     }
     
     this.useOllama = false;
-    console.log("[LLMHelper] Switched to Gemini");
+    console.log(`[LLMHelper] Switched to Gemini model: ${this.geminiModel}`);
+  }
+  
+  public async switchGeminiModel(model: string): Promise<void> {
+    if (!this.genAI) {
+      throw new Error("No Gemini API instance available");
+    }
+    
+    console.log(`[LLMHelper] Attempting to switch to Gemini model: ${model}`);
+    this.geminiModel = model;
+    
+    try {
+      this.model = this.genAI.getGenerativeModel({ model: this.geminiModel });
+      console.log(`[LLMHelper] Successfully switched to Gemini model: ${this.geminiModel}`);
+    } catch (error) {
+      console.error(`[LLMHelper] Error creating model instance for ${this.geminiModel}:`, error);
+      throw new Error(`Failed to initialize model ${this.geminiModel}: ${error.message}`);
+    }
   }
 
   public async testConnection(): Promise<{ success: boolean; error?: string }> {

@@ -6,6 +6,7 @@ export interface ElectronAPI {
   getScreenshots: () => Promise<Array<{ path: string; preview: string }>>
   deleteScreenshot: (path: string) => Promise<{ success: boolean; error?: string }>
   onScreenshotTaken: (callback: (data: { path: string; preview: string }) => void) => () => void
+  onScreenshotError: (callback: (error: string) => void) => () => void
   onSolutionsReady: (callback: (solutions: string) => void) => () => void
   onResetView: (callback: () => void) => () => void
   onSolutionStart: (callback: () => void) => () => void
@@ -25,6 +26,15 @@ export interface ElectronAPI {
   analyzeAudioFromBase64: (data: string, mimeType: string) => Promise<{ text: string; timestamp: number }>
   analyzeAudioFile: (path: string) => Promise<{ text: string; timestamp: number }>
   quitApp: () => Promise<void>
+  onInvisibilityModeChanged: (callback: (isInvisible: boolean) => void) => () => void
+  getCurrentLlmConfig: () => Promise<{ provider: "ollama" | "gemini"; model: string; isOllama: boolean }>
+  getAvailableOllamaModels: () => Promise<string[]>
+  getAvailableGeminiModels: () => Promise<Array<{ id: string; name: string; description: string }>>
+  fetchAvailableGeminiModels: () => Promise<Array<{ id: string; name: string; description: string; supportedGenerationMethods: string[] }>>
+  switchToOllama: (model?: string, url?: string) => Promise<{ success: boolean; error?: string }>
+  switchToGemini: (apiKey?: string, model?: string) => Promise<{ success: boolean; error?: string }>
+  switchGeminiModel: (model: string) => Promise<{ success: boolean; error?: string }>
+  testLlmConnection: () => Promise<{ success: boolean; error?: string }>
   invoke: (channel: string, ...args: any[]) => Promise<any>
 }
 
@@ -32,4 +42,6 @@ declare global {
   interface Window {
     electronAPI: ElectronAPI
   }
-} 
+}
+
+export {}

@@ -1,78 +1,222 @@
-<div align="center">
+<div align="center"><div align="center"><div align="center">
 
-<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/icon.png" alt="Velar Logo" width="120" height="120" />
 
-# Velar - Free Cluely Alternative
 
-**The best free and open-source alternative to Cluely**
+<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar Logo" width="120" height="120" />
 
-Your intelligent AI-powered desktop assistant for real-time insights, debugging support, and professional assistance during meetings, interviews, presentations, and development work.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+
+# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icon new.png" alt="Velar Logo" width="120" height="120" /><img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/icon.png" alt="Velar Logo" width="120" height="120" />
+
+
+
+**AI-Powered Desktop Assistant**
+
+
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue)# Velar# Velar - Free Cluely Alternative
+
 ![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
+
+
+
+</div>**AI-Powered Desktop Assistant****The best free and open-source alternative to Cluely**
+
+
+
+## Features
+
+
+
+- 📸 **Smart Screenshot Analysis** - Capture and analyze screen content with AI![Version](https://img.shields.io/badge/version-1.0.0-blue)Your intelligent AI-powered desktop assistant for real-time insights, debugging support, and professional assistance during meetings, interviews, presentations, and development work.
+
+- 🤖 **Dual AI Support** - Gemini (cloud) or Ollama (local)
+
+- 💬 **Interactive Chat** - Chat with AI about your screenshots![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+
+- 🎤 **Voice Input** - Speak your questions
+
+- 🔒 **Privacy First** - Incognito mode hides from screen recording![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)![Version](https://img.shields.io/badge/version-1.0.0-blue)
+
+- ⚡ **Global Shortcuts** - Quick keyboard access
+
+![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+
+## Quick Start
+
+</div>![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
+
+### Installation
+
 ![Free Alternative](https://img.shields.io/badge/Cluely-Free%20Alternative-brightgreen)
+
+1. Download the latest release
+
+2. Install and launch Velar## Features
+
+3. Configure your AI provider
 
 </div>
 
-> **🎉 100% Free Cluely Alternative** - All the features you need without the subscription fees. Perfect for students, developers, and professionals looking for a privacy-focused, open-source interview assistant and meeting companion.
+### Keyboard Shortcuts
 
----
+- 📸 **Smart Screenshot Analysis** - Capture and analyze any screen content with AI
 
-## ✨ Features
+- `Cmd/Ctrl + Shift + Space` - Show/hide window
 
-### 🎯 Smart Screenshot Analysis
-- **Instant Capture**: Press `Cmd/Ctrl + H` to capture any screen content
-- **AI-Powered Analysis**: Get detailed explanations, solutions, and insights
-- **Queue Management**: Capture up to 5 screenshots for comprehensive context
-- **High-Quality Processing**: Optimized image processing with Sharp
+- `Cmd/Ctrl + H` - Take screenshot- 🤖 **Dual AI Support** - Choose between Gemini (cloud) or Ollama (local)> **🎉 100% Free Cluely Alternative** - All the features you need without the subscription fees. Perfect for students, developers, and professionals looking for a privacy-focused, open-source interview assistant and meeting companion.
 
-### 🤖 Dual AI Provider Support
-- **Gemini (Cloud AI)**: Latest Google AI technology for maximum accuracy
-- **Ollama (Local AI)**: 100% private, offline AI processing on your machine
-- **Seamless Switching**: Toggle between providers based on your needs
-- **Custom Models**: Support for any Ollama-compatible model
+- `Cmd/Ctrl + I` - Toggle incognito mode
 
-### 🎙️ Audio Intelligence
+- 💬 **Interactive Chat** - Chat with AI about your screenshots
+
+## Configuration
+
+- 🎤 **Voice Input** - Speak your questions and get instant answers---
+
+### Gemini (Cloud AI)
+
+1. Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)- 🔒 **Privacy First** - Incognito mode hides from screen recording
+
+2. Open settings and enter your API key
+
+- ⚡ **Global Shortcuts** - Quick access with keyboard shortcuts## ✨ Features
+
+### Ollama (Local AI)
+
+1. Install [Ollama](https://ollama.ai)
+
+2. Pull a model: `ollama pull llama2`
+
+3. Select Ollama in settings## Quick Start### 🎯 Smart Screenshot Analysis
+
+
+
+## Development- **Instant Capture**: Press `Cmd/Ctrl + H` to capture any screen content
+
+
+
+```bash### Installation- **AI-Powered Analysis**: Get detailed explanations, solutions, and insights
+
+npm install
+
+npm start- **Queue Management**: Capture up to 5 screenshots for comprehensive context
+
+npm run dist
+
+```1. **Download** the latest release for your platform- **High-Quality Processing**: Optimized image processing with Sharp
+
+
+
+## License2. **Install** and launch Velar
+
+
+
+CC BY-NC 4.0 - Free for personal and non-commercial use.3. **Configure** your AI provider (Gemini or Ollama)### 🤖 Dual AI Provider Support
+
+
+
+## Support- **Gemini (Cloud AI)**: Latest Google AI technology for maximum accuracy
+
+
+
+[GitHub Issues](https://github.com/Saijayaranjan/Velar/issues)### Keyboard Shortcuts- **Ollama (Local AI)**: 100% private, offline AI processing on your machine
+
+
+
+---- **Seamless Switching**: Toggle between providers based on your needs
+
+
+
+<div align="center">- `Cmd/Ctrl + Shift + Space` - Show/hide window- **Custom Models**: Support for any Ollama-compatible model
+
+Made with ❤️ by the Velar Team
+
+</div>- `Cmd/Ctrl + H` - Take screenshot
+
+
+- `Cmd/Ctrl + I` - Toggle incognito mode### 🎙️ Audio Intelligence
+
 - **Voice Recording**: Record audio directly within the app
-- **AI Transcription**: Automatic transcription and analysis
+
+## Configuration- **AI Transcription**: Automatic transcription and analysis
+
 - **Meeting Notes**: Perfect for capturing meeting discussions
-- **Multi-format Support**: WebM, MP3, WAV, OGG
 
-### 💬 Contextual Chat
-- **AI Conversations**: Chat with AI about your screenshots
+### Gemini (Cloud AI)- **Multi-format Support**: WebM, MP3, WAV, OGG
+
+1. Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+2. Open settings and enter your API key### 💬 Contextual Chat
+
+3. Select your preferred model- **AI Conversations**: Chat with AI about your screenshots
+
 - **Context Awareness**: AI understands your screen content
-- **Follow-up Questions**: Natural conversation flow
-- **Code Explanations**: Get detailed code analysis
 
-### 🔒 Privacy-First Design
+### Ollama (Local AI)- **Follow-up Questions**: Natural conversation flow
+
+1. Install [Ollama](https://ollama.ai)- **Code Explanations**: Get detailed code analysis
+
+2. Pull a model: `ollama pull llama2`
+
+3. Select Ollama in settings### 🔒 Privacy-First Design
+
 - **Privacy Mode**: `Cmd/Ctrl + I` to prevent screen capture detection
-- **Local Processing**: Use Ollama for 100% private AI
+
+## Development- **Local Processing**: Use Ollama for 100% private AI
+
 - **No Data Storage**: Screenshots deleted after processing
-- **Transparent Operations**: Open source, audit-friendly
 
-### ⚡ Performance & UX
+```bash- **Transparent Operations**: Open source, audit-friendly
+
+# Install dependencies
+
+npm install### ⚡ Performance & UX
+
 - **Lightning Fast**: Optimized for minimal resource usage
-- **Always-On-Top**: Stays accessible without interrupting workflow
-- **Glass Morphism UI**: Modern, beautiful interface
+
+# Run in development- **Always-On-Top**: Stays accessible without interrupting workflow
+
+npm start- **Glass Morphism UI**: Modern, beautiful interface
+
 - **Keyboard Shortcuts**: Complete keyboard-driven workflow
-- **Cross-Platform**: Works on macOS, Windows, and Linux
 
----
+# Build for production- **Cross-Platform**: Works on macOS, Windows, and Linux
 
-## 🆚 Velar vs Cluely - Why Choose Velar?
+npm run dist
 
-| Feature | Velar (Free) | Cluely (Paid) |
+```---
+
+
+
+## License## 🆚 Velar vs Cluely - Why Choose Velar?
+
+
+
+This project is licensed under CC BY-NC 4.0 - free for personal and non-commercial use.| Feature | Velar (Free) | Cluely (Paid) |
+
 |---------|--------------|---------------|
-| **Price** | 100% Free | $29-99/month |
+
+## Support| **Price** | 100% Free | $29-99/month |
+
 | **AI Options** | Gemini + Ollama (Local) | Cloud-only |
-| **Privacy** | 100% Local AI option | Cloud-based |
+
+For issues and questions, please visit our [GitHub Issues](https://github.com/Saijayaranjan/Velar/issues).| **Privacy** | 100% Local AI option | Cloud-based |
+
 | **Open Source** | ✅ Yes | ❌ No |
-| **Offline Mode** | ✅ Yes (Ollama) | ❌ No |
+
+---| **Offline Mode** | ✅ Yes (Ollama) | ❌ No |
+
 | **Customizable** | ✅ Fully | ⚠️ Limited |
-| **Screenshot Analysis** | ✅ Yes | ✅ Yes |
-| **Audio Recording** | ✅ Yes | ✅ Yes |
-| **Chat Interface** | ✅ Yes | ✅ Yes |
+
+<div align="center">| **Screenshot Analysis** | ✅ Yes | ✅ Yes |
+
+Made with ❤️ by the Velar Team| **Audio Recording** | ✅ Yes | ✅ Yes |
+
+</div>| **Chat Interface** | ✅ Yes | ✅ Yes |
+
 | **Data Ownership** | ✅ You own it | ❌ Third-party |
 | **No Subscription** | ✅ Forever | ❌ Monthly fees |
 

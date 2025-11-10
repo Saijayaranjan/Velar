@@ -78,11 +78,11 @@ export class WindowHelper {
     try {
       let iconPath: string
       if (process.platform === 'win32') {
-        iconPath = path.join(__dirname, "../assets/icons/icon.ico")
+        iconPath = path.join(__dirname, "../assets/icons/velar_icon.ico")
       } else if (process.platform === 'darwin') {
-        iconPath = path.join(__dirname, "../assets/icons/icon.icns")
+        iconPath = path.join(__dirname, "../assets/icons/velar_icon.icns")
       } else {
-        iconPath = path.join(__dirname, "../assets/icons/icon.png")
+        iconPath = path.join(__dirname, "../assets/icons/velar_icon.icns")
       }
       appIcon = nativeImage.createFromPath(iconPath)
     } catch (error) {

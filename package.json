@@ -37,7 +37,7 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "assets/icons/icon.icns",
+      "icon": "assets/icons/velar_icon.icns",
       "target": [
         {
           "target": "dmg",
@@ -49,7 +49,7 @@
       ]
     },
     "win": {
-      "icon": "assets/icons/icon.ico",
+      "icon": "assets/icons/velar_icon.ico",
       "target": [
         {
           "target": "nsis",

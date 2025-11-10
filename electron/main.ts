@@ -195,11 +195,8 @@ export class AppState {
     // Load the app icon for tray
     let trayImage: Electron.NativeImage
     try {
-      // On macOS, use the simple "V" template for menu bar
-      // On other platforms, use the 16x16 full icon
-      const iconPath = process.platform === 'darwin'
-        ? path.join(__dirname, "../assets/icons/trayTemplate.png")
-        : path.join(__dirname, "../assets/icons/16x16.png")
+      // Use the velar_mac_tray.png for menu bar icon
+      const iconPath = path.join(__dirname, "../assets/icons/velar_mac_tray.png")
       
       trayImage = nativeImage.createFromPath(iconPath)
       

@@ -1,2 +1,0 @@
-We need a simple "V" monochrome icon for macOS menu bar.
-This will be created as a template image.

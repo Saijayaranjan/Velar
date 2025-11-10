@@ -77,7 +77,11 @@ export function initializeIpcHandlers(appState: AppState): void {
       return result
     } catch (error: any) {
       console.error("Error in analyze-audio-base64 handler:", error)
-      throw error
+      // Return error message to the user
+      return { 
+        error: true, 
+        message: error.message || "Failed to analyze audio. Please try again."
+      }
     }
   })
 
@@ -88,7 +92,11 @@ export function initializeIpcHandlers(appState: AppState): void {
       return result
     } catch (error: any) {
       console.error("Error in analyze-audio-file handler:", error)
-      throw error
+      // Return error message to the user
+      return { 
+        error: true, 
+        message: error.message || "Failed to analyze audio. Please try again."
+      }
     }
   })
 

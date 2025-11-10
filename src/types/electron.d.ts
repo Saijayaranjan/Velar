@@ -23,8 +23,8 @@ export interface ElectronAPI {
   moveWindowRight: () => Promise<void>
   moveWindowUp: () => Promise<void>
   moveWindowDown: () => Promise<void>
-  analyzeAudioFromBase64: (data: string, mimeType: string) => Promise<{ text: string; timestamp: number }>
-  analyzeAudioFile: (path: string) => Promise<{ text: string; timestamp: number }>
+  analyzeAudioFromBase64: (data: string, mimeType: string) => Promise<{ text: string; timestamp: number } | { error: boolean; message: string }>
+  analyzeAudioFile: (path: string) => Promise<{ text: string; timestamp: number } | { error: boolean; message: string }>
   quitApp: () => Promise<void>
   onInvisibilityModeChanged: (callback: (isInvisible: boolean) => void) => () => void
   getCurrentLlmConfig: () => Promise<{ provider: "ollama" | "gemini"; model: string; isOllama: boolean }>
@@ -34,7 +34,7 @@ export interface ElectronAPI {
   switchToOllama: (model?: string, url?: string) => Promise<{ success: boolean; error?: string }>
   switchToGemini: (apiKey?: string, model?: string) => Promise<{ success: boolean; error?: string }>
   switchGeminiModel: (model: string) => Promise<{ success: boolean; error?: string }>
-  testLlmConnection: () => Promise<{ success: boolean; error?: string }>
+  testLlmConnection: () => Promise<{ success: boolean; error?: string; capabilities?: { text: boolean; image: boolean; audio: boolean } }>
   invoke: (channel: string, ...args: any[]) => Promise<any>
 }
 

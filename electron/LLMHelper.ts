@@ -224,6 +224,25 @@ export class LLMHelper {
       return { text, timestamp: Date.now() };
     } catch (error) {
       console.error("Error analyzing audio file:", error);
+      
+      // Parse the error message to provide user-friendly feedback
+      if (error instanceof Error) {
+        let userMessage = error.message;
+        
+        // Handle specific error cases
+        if (error.message.includes('not found for API version') || error.message.includes('is not found')) {
+          userMessage = 'The selected AI model is currently unavailable. Please try using a different model.';
+        } else if (error.message.includes('overloaded') || error.message.includes('503')) {
+          userMessage = 'The AI service is currently overloaded. Please try again in a moment.';
+        } else if (error.message.includes('quota') || error.message.includes('429')) {
+          userMessage = 'API quota exceeded. Please try again later or use a different model.';
+        } else if (error.message.includes('API key') || error.message.includes('unauthorized') || error.message.includes('401')) {
+          userMessage = 'Invalid API key. Please check your API key in settings.';
+        }
+        
+        throw new Error(userMessage);
+      }
+      
       throw error;
     }
   }
@@ -243,6 +262,25 @@ export class LLMHelper {
       return { text, timestamp: Date.now() };
     } catch (error) {
       console.error("Error analyzing audio from base64:", error);
+      
+      // Parse the error message to provide user-friendly feedback
+      if (error instanceof Error) {
+        let userMessage = error.message;
+        
+        // Handle specific error cases
+        if (error.message.includes('not found for API version') || error.message.includes('is not found')) {
+          userMessage = 'The selected AI model is currently unavailable. Please try using a different model.';
+        } else if (error.message.includes('overloaded') || error.message.includes('503')) {
+          userMessage = 'The AI service is currently overloaded. Please try again in a moment.';
+        } else if (error.message.includes('quota') || error.message.includes('429')) {
+          userMessage = 'API quota exceeded. Please try again later or use a different model.';
+        } else if (error.message.includes('API key') || error.message.includes('unauthorized') || error.message.includes('401')) {
+          userMessage = 'Invalid API key. Please check your API key in settings.';
+        }
+        
+        throw new Error(userMessage);
+      }
+      
       throw error;
     }
   }
@@ -471,31 +509,113 @@ User query: ${message}`;
     }
   }
 
-  public async testConnection(): Promise<{ success: boolean; error?: string }> {
+  public async testConnection(): Promise<{ success: boolean; error?: string; capabilities?: { text: boolean; image: boolean; audio: boolean } }> {
     try {
+      const capabilities = { text: false, image: false, audio: false };
+      
       if (this.useOllama) {
         const available = await this.checkOllamaAvailable();
         if (!available) {
           return { success: false, error: `Ollama not available at ${this.ollamaUrl}` };
         }
-        // Test with a simple prompt
-        await this.callOllama("Hello");
-        return { success: true };
+        // Test text capability
+        try {
+          await this.callOllama("Hello");
+          capabilities.text = true;
+        } catch (err) {
+          return { success: false, error: `Text generation failed: ${err.message}` };
+        }
+        
+        // Ollama typically supports text, image support varies by model
+        // Audio support is limited
+        return { success: true, capabilities };
       } else {
         if (!this.model) {
           return { success: false, error: "No Gemini model configured" };
         }
-        // Test with a simple prompt
-        const result = await this.model.generateContent("Hello");
-        const response = await result.response;
-        const text = response.text(); // Ensure the response is valid
-        if (text) {
-          return { success: true };
+        
+        // Test 1: Text capability
+        try {
+          console.log("[LLMHelper] Testing text capability...");
+          const result = await this.model.generateContent("Say hello");
+          const response = await result.response;
+          const text = response.text();
+          console.log("[LLMHelper] Text test response:", text);
+          if (text && text.length > 0) {
+            capabilities.text = true;
+          } else {
+            console.log("[LLMHelper] Text test returned empty response");
+          }
+        } catch (err) {
+          console.error("[LLMHelper] Text test failed:", err);
+          return { success: false, error: `Text generation failed: ${err.message}`, capabilities };
+        }
+        
+        // Test 2: Image capability (using a small test image)
+        try {
+          console.log("[LLMHelper] Testing image capability...");
+          const testImageData = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="; // 1x1 transparent PNG
+          const imagePart = {
+            inlineData: {
+              data: testImageData,
+              mimeType: "image/png"
+            }
+          };
+          const imageResult = await this.model.generateContent(["What do you see?", imagePart]);
+          await imageResult.response;
+          capabilities.image = true;
+          console.log("[LLMHelper] Image capability: supported");
+        } catch (err) {
+          console.log("[LLMHelper] Image capability: not supported");
+          capabilities.image = false;
+        }
+        
+        // Test 3: Audio capability
+        try {
+          console.log("[LLMHelper] Testing audio capability...");
+          // Create a minimal valid WAV file (1 sample, 8000Hz, mono, 8-bit)
+          const wavHeader = Buffer.from([
+            0x52, 0x49, 0x46, 0x46, // "RIFF"
+            0x2C, 0x00, 0x00, 0x00, // File size - 8
+            0x57, 0x41, 0x56, 0x45, // "WAVE"
+            0x66, 0x6D, 0x74, 0x20, // "fmt "
+            0x10, 0x00, 0x00, 0x00, // Subchunk1Size (16)
+            0x01, 0x00,             // AudioFormat (1 = PCM)
+            0x01, 0x00,             // NumChannels (1 = mono)
+            0x40, 0x1F, 0x00, 0x00, // SampleRate (8000)
+            0x40, 0x1F, 0x00, 0x00, // ByteRate
+            0x01, 0x00,             // BlockAlign
+            0x08, 0x00,             // BitsPerSample (8)
+            0x64, 0x61, 0x74, 0x61, // "data"
+            0x08, 0x00, 0x00, 0x00, // Subchunk2Size
+            0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80 // 8 samples of silence
+          ]);
+          const testAudioData = wavHeader.toString('base64');
+          const audioPart = {
+            inlineData: {
+              data: testAudioData,
+              mimeType: "audio/wav"
+            }
+          };
+          const audioResult = await this.model.generateContent(["Describe this audio", audioPart]);
+          await audioResult.response;
+          capabilities.audio = true;
+          console.log("[LLMHelper] Audio capability: supported");
+        } catch (err) {
+          console.log("[LLMHelper] Audio capability: not supported");
+          capabilities.audio = false;
+        }
+        
+        // Return success if at least text works
+        if (capabilities.text) {
+          console.log("[LLMHelper] Connection test successful with capabilities:", capabilities);
+          return { success: true, capabilities };
         } else {
-          return { success: false, error: "Empty response from Gemini" };
+          return { success: false, error: "Model does not support basic text generation", capabilities };
         }
       }
     } catch (error) {
+      console.error("[LLMHelper] Connection test error:", error);
       return { success: false, error: error.message };
     }
   }

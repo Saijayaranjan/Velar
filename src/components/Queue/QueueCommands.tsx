@@ -70,7 +70,11 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
             const base64Data = (reader.result as string).split(',')[1]
             try {
               const result = await window.electronAPI.analyzeAudioFromBase64(base64Data, blob.type)
-              setAudioResult(result.text)
+              if ('error' in result) {
+                setAudioResult(`Error: ${(result as any).message}`)
+              } else {
+                setAudioResult(result.text)
+              }
             } catch (err) {
               setAudioResult('Audio analysis failed.')
             }

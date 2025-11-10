@@ -207,9 +207,11 @@ export class WindowHelper {
       return
     }
 
+    // Save current position before hiding
     const bounds = this.mainWindow.getBounds()
     this.windowPosition = { x: bounds.x, y: bounds.y }
     this.windowSize = { width: bounds.width, height: bounds.height }
+    
     this.mainWindow.hide()
     this.isWindowVisible = false
   }
@@ -220,17 +222,18 @@ export class WindowHelper {
       return
     }
 
+    // Restore position and size before showing
     if (this.windowPosition && this.windowSize) {
       this.mainWindow.setBounds({
         x: this.windowPosition.x,
         y: this.windowPosition.y,
         width: this.windowSize.width,
         height: this.windowSize.height
-      })
+      }, false) // false = don't animate
     }
 
-    this.mainWindow.showInactive()
-
+    this.mainWindow.show()
+    this.mainWindow.focus()
     this.isWindowVisible = true
   }
 

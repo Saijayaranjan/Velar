@@ -196,30 +196,19 @@ export class AppState {
     let trayImage: Electron.NativeImage
     try {
       if (process.platform === 'darwin') {
-        // On macOS, create image with both 22px (1x) and 44px (2x) for Retina displays
-        const icon1xPath = path.join(__dirname, "../assets/icons/tray_22.png")
-        const icon2xPath = path.join(__dirname, "../assets/icons/tray_44.png")
-        
-        trayImage = nativeImage.createFromPath(icon1xPath)
-        
-        // Add @2x version for Retina displays
-        const fs = require('fs')
-        if (fs.existsSync(icon2xPath)) {
-          const icon2x = nativeImage.createFromPath(icon2xPath)
-          if (!icon2x.isEmpty()) {
-            trayImage.addRepresentation({
-              scaleFactor: 2.0,
-              buffer: icon2x.toPNG()
-            })
-          }
-        }
-        
-        // Use template image for better integration with system theme
+        // On macOS, use high-quality V icon as template image
+        // Template images automatically adapt to light/dark mode
+        const iconPath = path.join(__dirname, "../assets/icons/trayTemplate.png")
+        trayImage = nativeImage.createFromPath(iconPath)
         trayImage.setTemplateImage(true)
       } else {
-        // Other platforms use the 22px icon
-        const iconPath = path.join(__dirname, "../assets/icons/tray_22.png")
+        // Other platforms use the ICO file
+        const iconPath = path.join(__dirname, "../assets/icons/velar_icon.ico")
         trayImage = nativeImage.createFromPath(iconPath)
+        
+        if (!trayImage.isEmpty()) {
+          trayImage = trayImage.resize({ width: 16, height: 16 })
+        }
       }
     } catch (error) {
       console.log("Could not load tray icon, using empty image:", error)

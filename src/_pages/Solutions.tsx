@@ -320,11 +320,17 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
                   base64Data,
                   blob.type
                 )
-                // Store result in react-query cache
-                queryClient.setQueryData(["audio_result"], result)
-                setAudioResult(result)
+                if ('error' in result) {
+                  // Display error message to user
+                  setAudioResult({ text: `Error: ${(result as any).message}`, timestamp: Date.now() })
+                } else {
+                  // Store result in react-query cache
+                  queryClient.setQueryData(["audio_result"], result)
+                  setAudioResult(result as { text: string; timestamp: number })
+                }
               } catch (err) {
                 console.error('Audio analysis failed:', err)
+                setAudioResult({ text: 'Audio analysis failed. Please try again.', timestamp: Date.now() })
               }
             }
             reader.readAsDataURL(blob)

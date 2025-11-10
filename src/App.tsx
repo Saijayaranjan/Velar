@@ -57,7 +57,7 @@ declare global {
       switchToOllama: (model?: string, url?: string) => Promise<{ success: boolean; error?: string }>
       switchToGemini: (apiKey?: string, model?: string) => Promise<{ success: boolean; error?: string }>
       switchGeminiModel: (model: string) => Promise<{ success: boolean; error?: string }>
-      testLlmConnection: () => Promise<{ success: boolean; error?: string }>
+      testLlmConnection: () => Promise<{ success: boolean; error?: string; capabilities?: { text: boolean; image: boolean; audio: boolean } }>
       
       invoke: (channel: string, ...args: any[]) => Promise<any>
     }

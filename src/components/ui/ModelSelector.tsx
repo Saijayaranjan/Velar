@@ -25,7 +25,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
   const [availableGeminiModels, setAvailableGeminiModels] = useState<GeminiModel[]>([]);
   const [isLoadingGeminiModels, setIsLoadingGeminiModels] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [connectionStatus, setConnectionStatus] = useState<'testing' | 'success' | 'error' | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'testing' | 'success' | 'partial' | 'limited' | 'error' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [fetchSuccess, setFetchSuccess] = useState<string>('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
@@ -111,9 +111,32 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
     try {
       setConnectionStatus('testing');
       const result = await window.electronAPI.testLlmConnection();
-      setConnectionStatus(result.success ? 'success' : 'error');
+      
       if (!result.success) {
+        setConnectionStatus('error');
         setErrorMessage(result.error || 'Unknown error');
+      } else if (result.capabilities) {
+        const caps = result.capabilities;
+        const allSupported = caps.text && caps.image && caps.audio;
+        const someSupported = caps.text && (caps.image || caps.audio) && !(caps.image && caps.audio);
+        
+        // Set status based on capabilities
+        if (allSupported) {
+          setConnectionStatus('success'); // Green
+        } else if (someSupported) {
+          setConnectionStatus('partial'); // Yellow
+        } else {
+          setConnectionStatus('limited'); // Red
+        }
+        
+        // Build message showing only supported capabilities
+        const capsList = [];
+        if (caps.text) capsList.push('Text');
+        if (caps.image) capsList.push('Images');
+        if (caps.audio) capsList.push('Audio');
+        setErrorMessage(`Capabilities: ${capsList.join(', ')}`);
+      } else {
+        setConnectionStatus('success');
       }
     } catch (error) {
       setConnectionStatus('error');
@@ -136,10 +159,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
         await loadCurrentConfig();
         setConnectionStatus('success');
         onModelChange?.(selectedProvider, selectedProvider === 'ollama' ? selectedOllamaModel : selectedGeminiModel);
-        // Auto-open chat window after successful model change
-        setTimeout(() => {
-          onChatOpen?.();
-        }, 500);
       } else {
         setConnectionStatus('error');
         setErrorMessage(result.error || 'Switch failed');
@@ -154,6 +173,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
     switch (connectionStatus) {
       case 'testing': return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30';
       case 'success': return 'bg-green-500/20 text-green-400 border border-green-500/30';
+      case 'partial': return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30';
+      case 'limited': return 'bg-red-500/20 text-red-400 border border-red-500/30';
       case 'error': return 'bg-red-500/20 text-red-400 border border-red-500/30';
       default: return 'bg-cluely-dark-card/40 text-cluely-text-muted border border-white/10';
     }
@@ -162,7 +183,9 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
   const getStatusText = () => {
     switch (connectionStatus) {
       case 'testing': return 'Testing...';
-      case 'success': return 'Connected';
+      case 'success': return 'All Features';
+      case 'partial': return 'Limited';
+      case 'limited': return 'Text Only';
       case 'error': return 'Error';
       default: return 'Ready';
     }
@@ -243,13 +266,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
         <div className="space-y-2.5 settings-provider-section">
           <div>
             <label className="settings-label">
-              <Key size={10} className="text-cluely-accent-teal" />
               <span>Gemini API Key</span>
               <span className="text-[9px] opacity-60">(optional if already set)</span>
             </label>
             <input
               type="password"
-              placeholder="sk-..."
+              placeholder="AIzaSy..."
               value={geminiApiKey}
               onChange={(e) => setGeminiApiKey(e.target.value)}
               className="modern-input"
@@ -257,10 +279,29 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
           </div>
           
           <div>
-            <label className="settings-label mb-1.5">
-              <BarChart3 size={10} className="text-cluely-accent-teal" />
-              <span>Model Selection</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="settings-label mb-0">
+                <span>Model Selection</span>
+              </label>
+              {availableGeminiModels.find(m => m.id === selectedGeminiModel) && (
+                <div className="group relative">
+                  <Info size={10} className="text-cluely-text-muted hover:text-cluely-accent-teal cursor-help transition-colors" />
+                  <div className="absolute right-0 top-full mt-1 w-64 bg-cluely-dark-card border border-white/10 rounded-lg p-2.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-xl">
+                    <p className="text-[10px] text-cluely-text-primary font-medium mb-1">
+                      {selectedGeminiModel}
+                    </p>
+                    {availableGeminiModels.find(m => m.id === selectedGeminiModel)?.description && (
+                      <p className="text-[9px] text-cluely-text-muted leading-relaxed mb-1">
+                        {availableGeminiModels.find(m => m.id === selectedGeminiModel)?.description}
+                      </p>
+                    )}
+                    <div className="text-[9px] text-cluely-accent-teal pt-0.5">
+                      {availableGeminiModels.length} models available
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             
             {/* Status messages */}
             {fetchSuccess && (
@@ -302,29 +343,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
                 )}
               </button>
             </div>
-            
-            {/* Model info card */}
-            {availableGeminiModels.find(m => m.id === selectedGeminiModel) && (
-              <div className="model-info-card">
-                <div className="flex items-start gap-2">
-                  <Info size={11} className="text-cluely-accent-teal mt-0.5 flex-shrink-0" />
-                  <div className="space-y-1 flex-1">
-                    <p className="text-[10px] text-cluely-text-primary font-medium">
-                      {selectedGeminiModel}
-                    </p>
-                    {availableGeminiModels.find(m => m.id === selectedGeminiModel)?.description && (
-                      <p className="text-[9px] text-cluely-text-muted leading-relaxed">
-                        {availableGeminiModels.find(m => m.id === selectedGeminiModel)?.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-1 text-[9px] text-cluely-accent-teal pt-0.5">
-                      <BarChart3 size={9} />
-                      <span>{availableGeminiModels.length} models available</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       ) : (
@@ -425,10 +443,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelChange, onChatOpen
             <span className="font-medium">Ollama</span>
             <span className="opacity-70"> - Run AI models locally on your machine</span>
           </div>
-        </div>
-        <div className="help-item tip">
-          <Key size={10} className="text-cluely-accent-cyan flex-shrink-0" />
-          <span>Use "Refresh Models" to fetch the latest available models for your provider</span>
         </div>
       </div>
     </div>

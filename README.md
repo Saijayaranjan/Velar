@@ -1,12 +1,12 @@
-<div align="center"><div align="center"><div align="center">
+<div align="center"><div align="center"><div align="center"><div align="center"><div align="center">
 
 
 
-<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar Logo" width="120" height="120" />
+<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar" width="100" />
 
 
 
-# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icon new.png" alt="Velar Logo" width="120" height="120" /><img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/icon.png" alt="Velar Logo" width="120" height="120" />
+# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar Logo" width="120" height="120" />
 
 
 
@@ -14,43 +14,87 @@
 
 
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)# Velar# Velar - Free Cluely Alternative
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar Logo" width="120" height="120" />
 
 ![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
 
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
 
 
+</div>
 
-</div>**AI-Powered Desktop Assistant****The best free and open-source alternative to Cluely**
-
-
+**AI-Powered Desktop Assistant**
 
 ## Features
 
 
 
-- 📸 **Smart Screenshot Analysis** - Capture and analyze screen content with AI![Version](https://img.shields.io/badge/version-1.0.0-blue)Your intelligent AI-powered desktop assistant for real-time insights, debugging support, and professional assistance during meetings, interviews, presentations, and development work.
+- 📸 Screenshot analysis with AI
 
-- 🤖 **Dual AI Support** - Gemini (cloud) or Ollama (local)
+- 🤖 Gemini or Ollama support![Version](https://img.shields.io/badge/version-1.0.0-blue)# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icon new.png" alt="Velar Logo" width="120" height="120" /><img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/icon.png" alt="Velar Logo" width="120" height="120" />
 
-- 💬 **Interactive Chat** - Chat with AI about your screenshots![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+- 💬 Interactive AI chat
 
-- 🎤 **Voice Input** - Speak your questions
+- 🔒 Privacy-first incognito mode![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
 
-- 🔒 **Privacy First** - Incognito mode hides from screen recording![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)![Version](https://img.shields.io/badge/version-1.0.0-blue)
+- ⚡ Global keyboard shortcuts
 
-- ⚡ **Global Shortcuts** - Quick keyboard access
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
 
-![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+## Shortcuts
+
+
+
+- `Cmd/Ctrl + Shift + Space` - Show/hide
+
+- `Cmd/Ctrl + H` - Screenshot</div>**AI-Powered Desktop Assistant**
+
+- `Cmd/Ctrl + I` - Incognito mode
+
+
+
+## Setup
+
+## Features
+
+```bash
+
+npm install
+
+npm start
+
+```- 📸 **Smart Screenshot Analysis** - Capture and analyze screen content with AI![Version](https://img.shields.io/badge/version-1.0.0-blue)# Velar# Velar - Free Cluely Alternative
+
+
+
+## License- 🤖 **Dual AI Support** - Gemini (cloud) or Ollama (local)
+
+
+
+CC BY-NC 4.0 - Free for personal use- 💬 **Interactive Chat** - Chat with AI about your screenshots![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+
+
+
+---- 🎤 **Voice Input** - Speak your questions
+
+
+
+<div align="center">- 🔒 **Privacy First** - Incognito mode hides from screen recording![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
+
+<a href="https://github.com/Saijayaranjan/Velar/issues">Issues</a> · 
+
+<a href="https://github.com/Saijayaranjan/Velar">GitHub</a>- ⚡ **Global Shortcuts** - Quick keyboard access
+
+</div>
+
+
 
 ## Quick Start
 
-</div>![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
+</div>**AI-Powered Desktop Assistant****The best free and open-source alternative to Cluely**
 
 ### Installation
 
-![Free Alternative](https://img.shields.io/badge/Cluely-Free%20Alternative-brightgreen)
+
 
 1. Download the latest release
 
@@ -58,15 +102,84 @@
 
 3. Configure your AI provider
 
-</div>
+
 
 ### Keyboard Shortcuts
 
-- 📸 **Smart Screenshot Analysis** - Capture and analyze any screen content with AI
+- 📸 **Smart Screenshot Analysis** - Capture and analyze screen content with AI![Version](https://img.shields.io/badge/version-1.0.0-blue)Your intelligent AI-powered desktop assistant for real-time insights, debugging support, and professional assistance during meetings, interviews, presentations, and development work.
 
 - `Cmd/Ctrl + Shift + Space` - Show/hide window
 
-- `Cmd/Ctrl + H` - Take screenshot- 🤖 **Dual AI Support** - Choose between Gemini (cloud) or Ollama (local)> **🎉 100% Free Cluely Alternative** - All the features you need without the subscription fees. Perfect for students, developers, and professionals looking for a privacy-focused, open-source interview assistant and meeting companion.
+- `Cmd/Ctrl + H` - Take screenshot- 🤖 **Dual AI Support** - Gemini (cloud) or Ollama (local)
+
+- `Cmd/Ctrl + I` - Toggle incognito mode
+
+- 💬 **Interactive Chat** - Chat with AI about your screenshots![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+
+## Configuration
+
+- 🎤 **Voice Input** - Speak your questions
+
+### Gemini (Cloud AI)
+
+1. Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)- 🔒 **Privacy First** - Incognito mode hides from screen recording![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)![Version](https://img.shields.io/badge/version-1.0.0-blue)
+
+2. Open settings and enter your API key
+
+- ⚡ **Global Shortcuts** - Quick keyboard access
+
+### Ollama (Local AI)
+
+1. Install [Ollama](https://ollama.ai)![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+
+2. Pull a model: `ollama pull llama2`
+
+3. Select Ollama in settings## Quick Start
+
+
+
+## Development</div>![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
+
+
+
+```bash### Installation
+
+npm install
+
+npm start![Free Alternative](https://img.shields.io/badge/Cluely-Free%20Alternative-brightgreen)
+
+npm run dist
+
+```1. Download the latest release
+
+
+
+## License2. Install and launch Velar## Features
+
+
+
+CC BY-NC 4.0 - Free for personal and non-commercial use.3. Configure your AI provider
+
+
+
+## Support</div>
+
+
+
+[GitHub Issues](https://github.com/Saijayaranjan/Velar/issues)### Keyboard Shortcuts
+
+
+
+---- 📸 **Smart Screenshot Analysis** - Capture and analyze any screen content with AI
+
+
+
+<div align="center">- `Cmd/Ctrl + Shift + Space` - Show/hide window
+
+Made with ❤️ by the Velar Team
+
+</div>- `Cmd/Ctrl + H` - Take screenshot- 🤖 **Dual AI Support** - Choose between Gemini (cloud) or Ollama (local)> **🎉 100% Free Cluely Alternative** - All the features you need without the subscription fees. Perfect for students, developers, and professionals looking for a privacy-focused, open-source interview assistant and meeting companion.
+
 
 - `Cmd/Ctrl + I` - Toggle incognito mode
 

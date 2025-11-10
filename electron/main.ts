@@ -195,8 +195,12 @@ export class AppState {
     // Load the app icon for tray
     let trayImage: Electron.NativeImage
     try {
-      // Use the 16x16 PNG for tray icon
-      const iconPath = path.join(__dirname, "../assets/icons/16x16.png")
+      // On macOS, use the simple "V" template for menu bar
+      // On other platforms, use the 16x16 full icon
+      const iconPath = process.platform === 'darwin'
+        ? path.join(__dirname, "../assets/icons/trayTemplate.png")
+        : path.join(__dirname, "../assets/icons/16x16.png")
+      
       trayImage = nativeImage.createFromPath(iconPath)
       
       // On macOS, use template image for better integration with system theme
@@ -212,15 +216,24 @@ export class AppState {
     
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: 'Show Velar',
+        label: 'Open Velar',
         click: () => {
           this.centerAndShowWindow()
         }
       },
       {
-        label: 'Toggle Window',
+        type: 'separator'
+      },
+      {
+        label: 'Visible Mode',
         click: () => {
-          this.toggleMainWindow()
+          this.windowHelper.setInvisibilityMode(false)
+        }
+      },
+      {
+        label: 'Incognito Mode',
+        click: () => {
+          this.windowHelper.setInvisibilityMode(true)
         }
       },
       {
@@ -258,11 +271,6 @@ export class AppState {
     
     this.tray.setToolTip('Velar - Press Cmd+Shift+Space to show')
     this.tray.setContextMenu(contextMenu)
-    
-    // Set a title for macOS (will appear in menu bar)
-    if (process.platform === 'darwin') {
-      this.tray.setTitle('IC')
-    }
     
     // Double-click to show window
     this.tray.on('double-click', () => {
@@ -309,6 +317,14 @@ async function initializeApp() {
 
   app.whenReady().then(() => {
     console.log("App is ready")
+    
+    // Set dock icon on macOS (full color icon)
+    if (process.platform === 'darwin' && app.dock) {
+      const dockIconPath = path.join(__dirname, "../assets/icons/icon.png")
+      const dockIcon = nativeImage.createFromPath(dockIconPath)
+      app.dock.setIcon(dockIcon)
+    }
+    
     appState.createWindow()
     appState.createTray()
     // Register global shortcuts using ShortcutsHelper
@@ -329,7 +345,7 @@ async function initializeApp() {
     }
   })
 
-  app.dock?.hide() // Hide dock icon (optional)
+  // Keep dock icon visible on macOS - removed app.dock?.hide()
   app.commandLine.appendSwitch("disable-background-timer-throttling")
 }
 

@@ -372,11 +372,14 @@ export class WindowHelper {
     this.isInvisibleMode = !this.isInvisibleMode
 
     if (this.isInvisibleMode) {
-      // Hide the tray icon in invisibility mode
+      // Hide the tray icon and dock icon in invisibility mode
       this.appState.hideTray()
       
-      // macOS: Use setContentProtection to prevent screen capture
+      // macOS: Hide from dock and use setContentProtection to prevent screen capture
       if (process.platform === 'darwin') {
+        const { app } = require('electron')
+        app.dock.hide()
+        
         // This is the KEY - makes window invisible to screen sharing but visible to user
         this.mainWindow.setContentProtection(true)
         
@@ -411,8 +414,14 @@ export class WindowHelper {
       // Send event to renderer to show indicator
       this.mainWindow.webContents.send('invisibility-mode-changed', true)
     } else {
-      // Show the tray icon when exiting invisibility mode
+      // Show the tray icon and dock icon when exiting invisibility mode
       this.appState.showTray()
+      
+      // macOS: Show in dock again
+      if (process.platform === 'darwin') {
+        const { app } = require('electron')
+        app.dock.show()
+      }
       
       // Disable screen capture protection
       if (process.platform === 'darwin') {
@@ -436,5 +445,14 @@ export class WindowHelper {
 
   public getInvisibilityMode(): boolean {
     return this.isInvisibleMode
+  }
+
+  public setInvisibilityMode(enabled: boolean): void {
+    if (!this.mainWindow || this.mainWindow.isDestroyed()) return
+    
+    // Only toggle if the mode is different from current state
+    if (this.isInvisibleMode !== enabled) {
+      this.toggleInvisibilityMode()
+    }
   }
 }

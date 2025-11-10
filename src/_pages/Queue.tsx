@@ -100,6 +100,12 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
     setChatMessages((msgs) => [...msgs, { role: "user", text: chatInput }])
     setChatLoading(true)
     setChatInput("")
+    
+    // Keep focus on input immediately after clearing
+    setTimeout(() => {
+      chatInputRef.current?.focus()
+    }, 0)
+    
     try {
       // Get all screenshots to send with the message
       const screenshotPaths = screenshots.map(s => s.path)
@@ -109,7 +115,10 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
       setChatMessages((msgs) => [...msgs, { role: "gemini", text: "Error: " + String(err) }])
     } finally {
       setChatLoading(false)
-      chatInputRef.current?.focus()
+      // Re-focus after response is received
+      setTimeout(() => {
+        chatInputRef.current?.focus()
+      }, 0)
     }
   }
 

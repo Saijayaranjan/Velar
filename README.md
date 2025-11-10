@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icon.png" alt="Velar Logo" width="120" height="120" />
+<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/icon.png" alt="Velar Logo" width="120" height="120" />
 
 # Velar - Free Cluely Alternative
 

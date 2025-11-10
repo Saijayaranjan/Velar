@@ -306,6 +306,47 @@ export class AppState {
   public getHasDebugged(): boolean {
     return this.hasDebugged
   }
+
+  public createApplicationMenu(): void {
+    const template: Electron.MenuItemConstructorOptions[] = [
+      {
+        label: 'Velar',
+        submenu: [
+          {
+            label: 'Open Velar',
+            accelerator: 'CmdOrCtrl+Shift+Space',
+            click: () => {
+              this.centerAndShowWindow()
+            }
+          },
+          { type: 'separator' },
+          {
+            label: 'Visible Mode',
+            click: () => {
+              this.windowHelper.setInvisibilityMode(false)
+            }
+          },
+          {
+            label: 'Incognito Mode',
+            click: () => {
+              this.windowHelper.setInvisibilityMode(true)
+            }
+          },
+          { type: 'separator' },
+          {
+            label: 'Quit',
+            accelerator: 'CmdOrCtrl+Q',
+            click: () => {
+              app.quit()
+            }
+          }
+        ]
+      }
+    ]
+
+    const menu = Menu.buildFromTemplate(template)
+    Menu.setApplicationMenu(menu)
+  }
 }
 
 // Application initialization
@@ -318,12 +359,13 @@ async function initializeApp() {
   app.whenReady().then(() => {
     console.log("App is ready")
     
-    // Set dock icon on macOS (full color icon)
+    // macOS: Hide dock icon completely - we only want menu bar icon
     if (process.platform === 'darwin' && app.dock) {
-      const dockIconPath = path.join(__dirname, "../assets/icons/icon.png")
-      const dockIcon = nativeImage.createFromPath(dockIconPath)
-      app.dock.setIcon(dockIcon)
+      app.dock.hide()
     }
+    
+    // Create application menu
+    appState.createApplicationMenu()
     
     appState.createWindow()
     appState.createTray()

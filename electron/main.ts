@@ -195,14 +195,30 @@ export class AppState {
     // Load the app icon for tray
     let trayImage: Electron.NativeImage
     try {
-      // Use the velar_mac_tray.png for menu bar icon
-      const iconPath = path.join(__dirname, "../assets/icons/velar_mac_tray.png")
-      
-      trayImage = nativeImage.createFromPath(iconPath)
-      
-      // On macOS, use template image for better integration with system theme
       if (process.platform === 'darwin') {
+        // On macOS, create image with both regular and @2x for Retina displays
+        const iconPath = path.join(__dirname, "../assets/icons/velar_mac_tray.png")
+        const icon2xPath = path.join(__dirname, "../assets/icons/velar_tray_icon2x.png")
+        
+        trayImage = nativeImage.createFromPath(iconPath)
+        
+        // Add @2x version for Retina displays
+        if (require('fs').existsSync(icon2xPath)) {
+          const icon2x = nativeImage.createFromPath(icon2xPath)
+          if (!icon2x.isEmpty()) {
+            trayImage.addRepresentation({
+              scaleFactor: 2.0,
+              buffer: icon2x.toPNG()
+            })
+          }
+        }
+        
+        // Use template image for better integration with system theme
         trayImage.setTemplateImage(true)
+      } else {
+        // Other platforms use the regular icon
+        const iconPath = path.join(__dirname, "../assets/icons/velar_mac_tray.png")
+        trayImage = nativeImage.createFromPath(iconPath)
       }
     } catch (error) {
       console.log("Could not load tray icon, using empty image:", error)

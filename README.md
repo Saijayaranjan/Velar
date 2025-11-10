@@ -1,114 +1,225 @@
-<div align="center"><div align="center"><div align="center"><div align="center"><div align="center">
+<div align="center"><div align="center"><div align="center"><div align="center"><div align="center"><div align="center">
 
 
 
-<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar" width="100" />
+<img src="assets/icons/velar_icon.icns" alt="Velar Logo" width="150" height="150" />
 
 
 
-# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar Logo" width="120" height="120" />
+# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar" width="100" />
 
 
 
-**AI-Powered Desktop Assistant**
+### AI-Powered Desktop Assistant for Developers
 
 
 
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar Logo" width="120" height="120" />
+[![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)](LICENSE)# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar Logo" width="120" height="120" />
 
-![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue)]()
+
+[![Version](https://img.shields.io/badge/version-1.0.0-orange)]()
 
 
 
-</div>
+**Smart screenshot analysis • AI chat • Voice input • Privacy-first****AI-Powered Desktop Assistant**
 
-**AI-Powered Desktop Assistant**
+
+
+[Download](https://github.com/Saijayaranjan/Velar/releases) • [Report Bug](https://github.com/Saijayaranjan/Velar/issues) • [Request Feature](https://github.com/Saijayaranjan/Velar/issues)
+
+
+
+</div>![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/velar_icon.icns" alt="Velar Logo" width="120" height="120" />
+
+
+
+---![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+
+
+
+## ✨ Features
+
+
+
+🎯 **Smart Screenshot Analysis**</div>
+
+- Capture any screen content with `Cmd/Ctrl + H`
+
+- Instant AI-powered explanations and solutions**AI-Powered Desktop Assistant**
+
+- Queue up to 5 screenshots for context
 
 ## Features
 
+🤖 **Dual AI Support**
 
+- **Gemini** - Cloud AI for maximum accuracy
+
+- **Ollama** - Local AI for complete privacy
 
 - 📸 Screenshot analysis with AI
 
-- 🤖 Gemini or Ollama support![Version](https://img.shields.io/badge/version-1.0.0-blue)# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icon new.png" alt="Velar Logo" width="120" height="120" /><img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/icon.png" alt="Velar Logo" width="120" height="120" />
+💬 **Interactive Chat**
 
-- 💬 Interactive AI chat
+- Ask follow-up questions- 🤖 Gemini or Ollama support![Version](https://img.shields.io/badge/version-1.0.0-blue)# Velar<img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icon new.png" alt="Velar Logo" width="120" height="120" /><img src="https://raw.githubusercontent.com/Saijayaranjan/Velar/main/assets/icons/icon.png" alt="Velar Logo" width="120" height="120" />
 
-- 🔒 Privacy-first incognito mode![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+- Context-aware conversations
 
-- ⚡ Global keyboard shortcuts
-
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
-
-## Shortcuts
+- Code explanations and debugging help- 💬 Interactive AI chat
 
 
+
+🎤 **Voice Input**- 🔒 Privacy-first incognito mode![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+
+- Record and transcribe audio
+
+- Perfect for meetings and interviews- ⚡ Global keyboard shortcuts
+
+
+
+🔒 **Privacy Mode**![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
+
+- Toggle incognito with `Cmd/Ctrl + I`
+
+- Hides from screen recording software## Shortcuts
+
+- All data stays on your device
+
+
+
+---
 
 - `Cmd/Ctrl + Shift + Space` - Show/hide
 
+## 🚀 Quick Start
+
 - `Cmd/Ctrl + H` - Screenshot</div>**AI-Powered Desktop Assistant**
-
-- `Cmd/Ctrl + I` - Incognito mode
-
-
-
-## Setup
-
-## Features
-
-```bash
-
-npm install
-
-npm start
-
-```- 📸 **Smart Screenshot Analysis** - Capture and analyze screen content with AI![Version](https://img.shields.io/badge/version-1.0.0-blue)# Velar# Velar - Free Cluely Alternative
-
-
-
-## License- 🤖 **Dual AI Support** - Gemini (cloud) or Ollama (local)
-
-
-
-CC BY-NC 4.0 - Free for personal use- 💬 **Interactive Chat** - Chat with AI about your screenshots![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
-
-
-
----- 🎤 **Voice Input** - Speak your questions
-
-
-
-<div align="center">- 🔒 **Privacy First** - Incognito mode hides from screen recording![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
-
-<a href="https://github.com/Saijayaranjan/Velar/issues">Issues</a> · 
-
-<a href="https://github.com/Saijayaranjan/Velar">GitHub</a>- ⚡ **Global Shortcuts** - Quick keyboard access
-
-</div>
-
-
-
-## Quick Start
-
-</div>**AI-Powered Desktop Assistant****The best free and open-source alternative to Cluely**
 
 ### Installation
 
+- `Cmd/Ctrl + I` - Incognito mode
+
+Download the latest release for your platform:
+
+- **macOS**: `Velar-1.0.0.dmg`
+
+- **Windows**: `Velar-Setup-1.0.0.exe`
+
+- **Linux**: `Velar-1.0.0.AppImage`## Setup
 
 
-1. Download the latest release
 
-2. Install and launch Velar## Features
-
-3. Configure your AI provider
+### Setup## Features
 
 
 
-### Keyboard Shortcuts
+1. **Install and launch** Velar```bash
 
-- 📸 **Smart Screenshot Analysis** - Capture and analyze screen content with AI![Version](https://img.shields.io/badge/version-1.0.0-blue)Your intelligent AI-powered desktop assistant for real-time insights, debugging support, and professional assistance during meetings, interviews, presentations, and development work.
+2. **Configure AI provider**:
 
-- `Cmd/Ctrl + Shift + Space` - Show/hide window
+   - **Gemini**: Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)npm install
+
+   - **Ollama**: Install from [ollama.ai](https://ollama.ai) and pull a model
+
+3. **Grant permissions** (macOS: Screen Recording permission required)npm start
+
+
+
+### Keyboard Shortcuts```- 📸 **Smart Screenshot Analysis** - Capture and analyze screen content with AI![Version](https://img.shields.io/badge/version-1.0.0-blue)# Velar# Velar - Free Cluely Alternative
+
+
+
+| Shortcut | Action |
+
+|----------|--------|
+
+| `Cmd/Ctrl + Shift + Space` | Show/hide window |## License- 🤖 **Dual AI Support** - Gemini (cloud) or Ollama (local)
+
+| `Cmd/Ctrl + H` | Take screenshot |
+
+| `Cmd/Ctrl + I` | Toggle incognito mode |
+
+| `Cmd/Ctrl + Enter` | Analyze screenshots |
+
+CC BY-NC 4.0 - Free for personal use- 💬 **Interactive Chat** - Chat with AI about your screenshots![License](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)
+
+---
+
+
+
+## 🛠️ Development
+
+---- 🎤 **Voice Input** - Speak your questions
+
+```bash
+
+# Install dependencies
+
+npm install
+
+<div align="center">- 🔒 **Privacy First** - Incognito mode hides from screen recording![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)
+
+# Run in development mode
+
+npm start<a href="https://github.com/Saijayaranjan/Velar/issues">Issues</a> · 
+
+
+
+# Build for production<a href="https://github.com/Saijayaranjan/Velar">GitHub</a>- ⚡ **Global Shortcuts** - Quick keyboard access
+
+npm run dist
+
+```</div>
+
+
+
+**Requirements**: Node.js 18+, npm 9+
+
+
+
+---## Quick Start
+
+
+
+## 📝 License</div>**AI-Powered Desktop Assistant****The best free and open-source alternative to Cluely**
+
+
+
+This project is licensed under **CC BY-NC 4.0** - free for personal and non-commercial use.### Installation
+
+
+
+---
+
+
+
+## 🤝 Contributing1. Download the latest release
+
+
+
+Contributions are welcome! Please feel free to submit a Pull Request.2. Install and launch Velar## Features
+
+
+
+---3. Configure your AI provider
+
+
+
+<div align="center">
+
+
+
+**Made with ❤️ for developers**### Keyboard Shortcuts
+
+
+
+[⭐ Star this repo](https://github.com/Saijayaranjan/Velar) if you find it helpful!- 📸 **Smart Screenshot Analysis** - Capture and analyze screen content with AI![Version](https://img.shields.io/badge/version-1.0.0-blue)Your intelligent AI-powered desktop assistant for real-time insights, debugging support, and professional assistance during meetings, interviews, presentations, and development work.
+
+
+
+</div>- `Cmd/Ctrl + Shift + Space` - Show/hide window
+
 
 - `Cmd/Ctrl + H` - Take screenshot- 🤖 **Dual AI Support** - Gemini (cloud) or Ollama (local)
 
